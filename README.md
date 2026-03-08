@@ -31,6 +31,11 @@ yc2026/
 ├── strategy/                              # Our planning & strategy docs
 │   └── PRD_v1.0_GuidanceOS.md             # PRD draft — starting point for discussion
 │
+├── frontend/                              # Runnable Next.js hello world app
+│   ├── app/                               # App Router entrypoint and page
+│   ├── package.json                       # Frontend scripts and dependencies
+│   └── README.md                          # Frontend setup instructions
+│
 └── src/                                   # Application source code (TBD)
 ```
 
