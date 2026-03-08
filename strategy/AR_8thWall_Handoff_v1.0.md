@@ -26,6 +26,25 @@ The missing work is now mostly 8th Wall setup and wiring, not product definition
 - Dashboard receiver: `src/ar-canister-demo/dashboard.html`
 - Manual and MindAR fallback paths
 
+## Local 8th Wall Export Status
+
+A local 8th Wall export now exists outside the main repo at:
+
+- `/Users/wildman/GitHub/yc2026_8thwall`
+
+Current state of that export:
+
+- `src/app.js` now provides a WIL-9 worker overlay for the canister task
+- the overlay supports manual anchor lock, before/after capture, and proof JSON generation
+- `reality.imagescanning`, `reality.imagefound`, `reality.imageupdated`, `reality.imagelost`,
+  and `reality.trackingstatus` listeners are wired
+- the export builds successfully to `dist/`
+
+What is still missing in the local export:
+
+- trained image-target payloads or configured `window.RPG_IMAGE_TARGETS`
+- a stable HTTPS mobile testing path for live phone camera use
+
 ## External Inputs Required
 
 - 8th Wall account access
