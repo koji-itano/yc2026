@@ -33,7 +33,12 @@ yc2026/
 ├── strategy/                              # 戦略・企画 / Our planning docs
 │   └── PRD_v1.0_GuidanceOS.md             #   PRD たたき台 / Draft PRD
 │
-└── src/                                   # ソースコード / Source code (TBD)
+├── frontend/                              # 実行可能な Next.js フロントエンド / Runnable Next.js app
+│   ├── app/                               #   App Router のエントリ / App Router entrypoint
+│   ├── package.json                       #   依存関係と scripts / Dependencies and scripts
+│   └── README.md                          #   セットアップ手順 / Setup instructions
+│
+└── src/                                   # ソースコード / Application source code (TBD)
 ```
 
 ---
