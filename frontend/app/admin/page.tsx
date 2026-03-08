@@ -1,46 +1,127 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import incomingTasksData from "../data/incomingTasks.json";
-import workersData from "../data/workers.json";
-import { rankCandidates, type AdminTask, type RankedCandidate, type Worker } from "../lib/adminMatching";
+import type { AdminCandidate, AdminTask } from "../lib/adminMatching";
 
 const tasks = incomingTasksData as AdminTask[];
-const workers = workersData as Worker[];
-
-function formatAvailability(availability: Worker["availability"]) {
-  if (availability === "available") {
-    return "Available";
-  }
-
-  if (availability === "busy") {
-    return "Busy";
-  }
-
-  return "Offline";
-}
 
 function formatPriority(priority: AdminTask["priority"]) {
   return priority.charAt(0).toUpperCase() + priority.slice(1);
 }
 
+type CandidateFetchState =
+  | {
+      candidates: AdminCandidate[];
+      status: "success";
+    }
+  | {
+      error: string;
+      status: "error";
+    }
+  | {
+      status: "idle" | "loading";
+    };
+
+type AssignmentRecord = Pick<AdminCandidate, "company" | "id" | "location" | "name" | "title">;
+
 export default function AdminPage() {
-  const [assignments, setAssignments] = useState<Record<string, string>>({});
+  const [assignments, setAssignments] = useState<Record<string, AssignmentRecord>>({});
+  const [candidateStates, setCandidateStates] = useState<Record<string, CandidateFetchState>>({});
   const [selectedTaskId, setSelectedTaskId] = useState<string>(() => tasks[0]?.id ?? "");
+  const candidateStatesRef = useRef<Record<string, CandidateFetchState>>({});
 
   const selectedTask =
     tasks.find((task) => task.id === selectedTaskId) ??
     tasks.find((task) => !assignments[task.id]) ??
     tasks[0];
 
-  const rankedCandidates: RankedCandidate[] = selectedTask ? rankCandidates(selectedTask, workers) : [];
-  const selectedAssignee = selectedTask ? workers.find((worker) => worker.id === assignments[selectedTask.id]) : undefined;
+  const selectedTaskState = selectedTask ? candidateStates[selectedTask.id] : undefined;
+  const rankedCandidates = selectedTaskState?.status === "success" ? selectedTaskState.candidates : [];
+  const selectedAssignee = selectedTask ? assignments[selectedTask.id] : undefined;
+  const selectedTaskIdKey = selectedTask?.id;
 
-  function handleAssign(taskId: string, workerId: string) {
+  useEffect(() => {
+    candidateStatesRef.current = candidateStates;
+  }, [candidateStates]);
+
+  useEffect(() => {
+    if (!selectedTask || !selectedTaskIdKey) {
+      return;
+    }
+
+    const existingState = candidateStatesRef.current[selectedTaskIdKey];
+
+    if (
+      existingState?.status === "success" ||
+      existingState?.status === "error" ||
+      existingState?.status === "loading"
+    ) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const taskId = selectedTask.id;
+
+    async function loadCandidates() {
+      setCandidateStates((current) => ({
+        ...current,
+        [taskId]: {
+          status: "loading",
+        },
+      }));
+
+      const response = await fetch(`/api/admin/candidates?taskId=${taskId}`, {
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      const payload = (await response.json()) as { candidates?: AdminCandidate[]; error?: string };
+
+      if (!response.ok || !Array.isArray(payload.candidates)) {
+        throw new Error(payload.error ?? "Unable to load candidates right now.");
+      }
+
+      const candidates = payload.candidates;
+
+      setCandidateStates((current) => ({
+        ...current,
+        [taskId]: {
+          candidates,
+          status: "success",
+        },
+      }));
+    }
+
+    loadCandidates().catch((error: unknown) => {
+      if (controller.signal.aborted) {
+        return;
+      }
+
+      setCandidateStates((current) => ({
+        ...current,
+        [taskId]: {
+          error: error instanceof Error ? error.message : "Unable to load candidates right now.",
+          status: "error",
+        },
+      }));
+    });
+
+    return () => {
+      controller.abort();
+    };
+  }, [selectedTask, selectedTaskIdKey]);
+
+  function handleAssign(taskId: string, candidate: AdminCandidate) {
     setAssignments((current) => ({
       ...current,
-      [taskId]: workerId,
+      [taskId]: {
+        company: candidate.company,
+        id: candidate.id,
+        location: candidate.location,
+        name: candidate.name,
+        title: candidate.title,
+      },
     }));
   }
 
@@ -78,7 +159,7 @@ export default function AdminPage() {
             </div>
             <div className="adminQueueList">
               {tasks.map((task) => {
-                const assignedWorker = workers.find((worker) => worker.id === assignments[task.id]);
+                const assignedWorker = assignments[task.id];
                 const isSelected = task.id === selectedTask?.id;
                 const isAssigned = Boolean(assignedWorker);
 
@@ -155,7 +236,7 @@ export default function AdminPage() {
                   <strong>{selectedAssignee ? `Assigned to ${selectedAssignee.name}` : "Awaiting assignment"}</strong>
                   <span>
                     {selectedAssignee
-                      ? `${formatAvailability(selectedAssignee.availability)} • ${selectedAssignee.homeArea} • ${selectedAssignee.languages.join(", ")}`
+                      ? `${selectedAssignee.title} • ${selectedAssignee.company} • ${selectedAssignee.location}`
                       : "Review the ranked list and approve the best human operator."}
                   </span>
                 </div>
@@ -166,60 +247,81 @@ export default function AdminPage() {
           <section className="adminPanel adminCandidatesPanel">
             <div className="adminPanelHeader">
               <h2>Ranked Candidates</h2>
-              <span>Skill + distance</span>
+              <span>Live from Crustdata</span>
             </div>
-            <div className="adminCandidatesList">
-              {rankedCandidates.map((candidate, index) => {
-                const isAssigned = selectedTask ? assignments[selectedTask.id] === candidate.worker.id : false;
+            {selectedTaskState?.status === "loading" || !selectedTaskState ? (
+              <div className="adminCandidatesState">
+                <strong>Searching Crustdata</strong>
+                <p>Looking for people in Tokyo whose profile fits {selectedTask?.requiredSkill ?? "this task"}.</p>
+              </div>
+            ) : null}
 
-                return (
-                  <article
-                    className={`adminCandidateCard${index < 3 ? " adminCandidateCardTop" : ""}`}
-                    key={candidate.worker.id}
-                  >
-                    <div className="adminCandidateHeader">
-                      <div>
-                        <span className="adminCandidateRank">#{index + 1} match</span>
-                        <h3>{candidate.worker.name}</h3>
+            {selectedTaskState?.status === "error" ? (
+              <div className="adminCandidatesState adminCandidatesStateError">
+                <strong>Candidate search unavailable</strong>
+                <p>{selectedTaskState.error}</p>
+              </div>
+            ) : null}
+
+            {selectedTaskState?.status === "success" && rankedCandidates.length === 0 ? (
+              <div className="adminCandidatesState">
+                <strong>No matching profiles found</strong>
+                <p>Crustdata returned no candidates for this task profile. Try another task or broaden the search profile.</p>
+              </div>
+            ) : null}
+
+            {selectedTaskState?.status === "success" && rankedCandidates.length > 0 ? (
+              <div className="adminCandidatesList">
+                {rankedCandidates.map((candidate, index) => {
+                  const isAssigned = selectedTask ? assignments[selectedTask.id]?.id === candidate.id : false;
+
+                  return (
+                    <article
+                      className={`adminCandidateCard${index < 3 ? " adminCandidateCardTop" : ""}`}
+                      key={candidate.id}
+                    >
+                      <div className="adminCandidateHeader">
+                        <div>
+                          <span className="adminCandidateRank">#{index + 1} match</span>
+                          <h3>{candidate.name}</h3>
+                          <p className="adminCandidateCompany">
+                            {candidate.title} at {candidate.company}
+                          </p>
+                        </div>
+                        <div className="adminCandidateScore">{candidate.score}</div>
                       </div>
-                      <div className="adminCandidateScore">{candidate.score}</div>
-                    </div>
-                    <div className="adminCandidateMeta">
-                      <span className={`adminChip adminChipAvailability adminChip${formatAvailability(candidate.worker.availability)}`}>
-                        {formatAvailability(candidate.worker.availability)}
-                      </span>
-                      <span className="adminChip">{candidate.distanceLabel}</span>
-                      <span className="adminChip">{candidate.worker.homeArea}</span>
-                    </div>
-                    <p className="adminCandidateSummary">
-                      Rating {candidate.worker.rating.toFixed(1)} • Load {candidate.worker.currentLoad} • Languages{" "}
-                      {candidate.worker.languages.join(", ")}
-                    </p>
-                    <div className="adminCandidateSkills">
-                      {candidate.worker.skills.map((skill) => (
-                        <span className="adminSkillPill" key={skill}>
-                          {skill}
+                      <div className="adminCandidateMeta">
+                        <span className={`adminChip adminChipProfile adminChipProfile${candidate.profileConfidence}`}>
+                          {candidate.profileConfidence} confidence
                         </span>
-                      ))}
-                    </div>
-                    <ul className="adminReasonList">
-                      {candidate.reasons.map((reason) => (
-                        <li key={reason}>{reason}</li>
-                      ))}
-                    </ul>
-                    <div className="adminCandidateActions">
-                      <button
-                        className={`adminAssignButton${isAssigned ? " adminAssignButtonAssigned" : ""}`}
-                        onClick={() => selectedTask && handleAssign(selectedTask.id, candidate.worker.id)}
-                        type="button"
-                      >
-                        {isAssigned ? "Assigned" : "Assign"}
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
+                        <span className="adminChip">{candidate.distanceLabel}</span>
+                        <span className="adminChip">{candidate.location}</span>
+                      </div>
+                      <p className="adminCandidateSummary">{candidate.headline}</p>
+                      <ul className="adminReasonList">
+                        {candidate.reasons.map((reason) => (
+                          <li key={reason}>{reason}</li>
+                        ))}
+                      </ul>
+                      <div className="adminCandidateActions">
+                        {candidate.linkedinUrl ? (
+                          <a className="adminExternalLink" href={candidate.linkedinUrl} rel="noreferrer" target="_blank">
+                            Open profile
+                          </a>
+                        ) : null}
+                        <button
+                          className={`adminAssignButton${isAssigned ? " adminAssignButtonAssigned" : ""}`}
+                          onClick={() => selectedTask && handleAssign(selectedTask.id, candidate)}
+                          type="button"
+                        >
+                          {isAssigned ? "Assigned" : "Assign"}
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : null}
           </section>
         </div>
       </section>
