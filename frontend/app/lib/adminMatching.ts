@@ -235,6 +235,52 @@ function mapCrustdataPerson(person: CrustdataPerson): AdminCandidate {
   };
 }
 
+export type TaskRecommendation = {
+  reason: string;
+  score: number;
+  task: AdminTask;
+};
+
+/**
+ * Given a ranked candidate (returned from Crustdata), score every task in the
+ * task list and return the top matches — i.e. the "recommended tasks for this
+ * human operator" based on their profile.
+ */
+export function recommendTasksForCandidate(
+  candidate: AdminCandidate,
+  tasks: AdminTask[],
+  limit = 3,
+): TaskRecommendation[] {
+  return tasks
+    .map((task) => {
+      const roleFit = getRoleFit(task, candidate);
+      const distance = getDistanceScore(task, candidate);
+      const score = roleFit.points + distance.points;
+
+      const reasons: string[] = [];
+      if (roleFit.points >= 42) {
+        reasons.push(`Strong skill match — ${task.requiredSkill}`);
+      } else if (roleFit.points >= 28) {
+        reasons.push(`Good ${task.type} alignment`);
+      } else {
+        reasons.push("Adjacent ops profile");
+      }
+      if (distance.points >= 24) {
+        reasons.push("In the same zone");
+      } else if (distance.points >= 14) {
+        reasons.push("Tokyo-wide reach");
+      }
+
+      return {
+        reason: reasons.join(" · "),
+        score,
+        task,
+      };
+    })
+    .sort((a, b) => b.score - a.score || a.task.title.localeCompare(b.task.title))
+    .slice(0, limit);
+}
+
 export function rerankCandidates(task: AdminTask, profiles: CrustdataPerson[]): AdminCandidate[] {
   return profiles
     .map((profile) => {
