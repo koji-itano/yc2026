@@ -1,9 +1,34 @@
 import "server-only";
 
-import type { AdminCandidate, AdminTask, CrustdataPerson, CrustdataRequestPayload } from "./adminMatching";
-import { rerankCandidates } from "./adminMatching";
+import type { AdminTask } from "./adminMatching";
 
 const CRUSTDATA_API_URL = "https://api.crustdata.com/screener/person/search";
+
+type CrustdataRequestPayload = {
+  filters: Array<{
+    filter_type: string;
+    type: string;
+    value: string[];
+  }>;
+  page: number;
+};
+
+type CrustdataPerson = {
+  current_company_name?: string;
+  current_title?: string;
+  linkedin_profile_url?: string;
+  linkedin_profile_urn?: string;
+  name?: string;
+  query_person_linkedin_urn?: string;
+};
+
+export type CrustdataCandidate = {
+  company: string;
+  id: string;
+  linkedinUrl: string | undefined;
+  name: string;
+  title: string;
+};
 
 function getToken() {
   const token = process.env.cstdata_token;
@@ -26,7 +51,7 @@ function buildCrustdataPayload(task: AdminTask): CrustdataRequestPayload {
       {
         filter_type: "FUNCTION",
         type: "in",
-        value: task.searchProfile.functions,
+        value: ["Operations"],
       },
     ],
     page: 1,
@@ -59,49 +84,17 @@ async function fetchCrustdataProfiles(payload: CrustdataRequestPayload): Promise
   return data.profiles;
 }
 
-export async function searchCandidatesForTask(task: AdminTask): Promise<AdminCandidate[]> {
-  const primaryProfiles = await fetchCrustdataProfiles(buildCrustdataPayload(task));
-  let candidates = rerankCandidates(task, primaryProfiles);
+function toCandidates(profiles: CrustdataPerson[]): CrustdataCandidate[] {
+  return profiles.map((p, i) => ({
+    company: p.current_company_name ?? "",
+    id: p.linkedin_profile_urn ?? `crustdata-${i}`,
+    linkedinUrl: p.linkedin_profile_url,
+    name: p.name ?? "Unknown",
+    title: p.current_title ?? "",
+  }));
+}
 
-  if (candidates.length >= 6) {
-    return candidates;
-  }
-
-  const fallbackProfiles = await fetchCrustdataProfiles({
-    filters: [
-      {
-        filter_type: "REGION",
-        type: "in",
-        value: ["Tokyo, Japan"],
-      },
-    ],
-    page: 1,
-  });
-
-  const mergedProfiles = [...primaryProfiles];
-  const seenIds = new Set(
-    mergedProfiles.map(
-      (profile) =>
-        profile.linkedin_profile_urn ??
-        profile.query_person_linkedin_urn ??
-        profile.linkedin_profile_url ??
-        `${profile.name ?? ""}:${profile.current_title ?? ""}`,
-    ),
-  );
-
-  fallbackProfiles.forEach((profile) => {
-    const id =
-      profile.linkedin_profile_urn ??
-      profile.query_person_linkedin_urn ??
-      profile.linkedin_profile_url ??
-      `${profile.name ?? ""}:${profile.current_title ?? ""}`;
-
-    if (!seenIds.has(id)) {
-      seenIds.add(id);
-      mergedProfiles.push(profile);
-    }
-  });
-
-  candidates = rerankCandidates(task, mergedProfiles);
-  return candidates;
+export async function searchCandidatesForTask(task: AdminTask): Promise<CrustdataCandidate[]> {
+  const profiles = await fetchCrustdataProfiles(buildCrustdataPayload(task));
+  return toCandidates(profiles);
 }
