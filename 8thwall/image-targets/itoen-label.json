@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/itoen-label_luminance.jpg",
+  "metadata": null,
+  "name": "itoen-label",
+  "type": "PLANAR",
+  "properties": {
+    "left": 0,
+    "top": 0,
+    "width": 480,
+    "height": 640,
+    "isRotated": false,
+    "originalWidth": 480,
+    "originalHeight": 640
+  },
+  "resources": {
+    "originalImage": "itoen-label_original.jpg",
+    "croppedImage": "itoen-label_cropped.jpg",
+    "thumbnailImage": "itoen-label_thumbnail.jpg",
+    "luminanceImage": "itoen-label_luminance.jpg"
+  },
+  "created": 1772948843294,
+  "updated": 1772948843294
+}

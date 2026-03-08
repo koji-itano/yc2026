@@ -36,6 +36,7 @@ Current state of that export:
 
 - `src/app.js` now provides a WIL-9 worker overlay for the canister task
 - the overlay now exposes a Mac desktop `Enable desktop webcam` path using `getUserMedia()`
+- the desktop path now renders a realtime webcam preview into an HTML `<canvas>` element
 - the overlay supports manual anchor lock, before/after capture, and proof JSON generation
 - `reality.imagescanning`, `reality.imagefound`, `reality.imageupdated`, `reality.imagelost`,
   and `reality.trackingstatus` listeners are wired
@@ -45,6 +46,23 @@ What is still missing in the local export:
 
 - trained image-target payloads or configured `window.RPG_IMAGE_TARGETS`
 - a stable HTTPS mobile testing path for live phone camera use
+
+## Automated Test Result In This Environment
+
+The local export now configures two generated targets:
+
+- `itoen-label`
+- `canister-cap`
+
+Automated verification completed:
+
+- `image_targets_configured` appears in the event log when the page boots
+- the desktop webcam path times out cleanly when no media device is available to the automation browser
+
+Automated verification not completed:
+
+- real `image_found` / `image_updated` events could not be observed from Playwright because this
+  environment does not expose a usable webcam device stream to the automated browser session
 
 ## External Inputs Required
 
