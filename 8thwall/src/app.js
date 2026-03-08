@@ -702,6 +702,7 @@ function render() {
   DOM.webcamButton.style.display = "inline-flex";
   DOM.liveCamera.style.display = !isDesktopBrowser() && state.liveCameraEnabled ? "block" : "none";
   DOM.desktopPreview.style.display = isDesktopBrowser() ? "block" : "none";
+  syncSceneCanvasVisibility();
   DOM.beforeButton.disabled = !state.targetLocked;
   DOM.doneButton.disabled = !state.beforeCapture;
   DOM.afterButton.disabled = !state.instructionCompletedAt;
@@ -710,6 +711,14 @@ function render() {
   renderImageSlot(DOM.beforeSlot, state.beforeCapture, "Before");
   renderImageSlot(DOM.afterSlot, state.afterCapture, "After");
   renderLog();
+}
+
+function syncSceneCanvasVisibility() {
+  const sceneCanvases = Array.from(document.querySelectorAll("body canvas:not(#rpg-desktop-preview)"));
+  const hideSceneCanvas = !isDesktopBrowser() && state.liveCameraEnabled;
+  sceneCanvases.forEach((canvas) => {
+    canvas.style.opacity = hideSceneCanvas ? "0" : "1";
+  });
 }
 
 function toggleFocusMode() {

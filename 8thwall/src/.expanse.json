@@ -93,8 +93,8 @@
     "e72f8145-d2fd-4946-9abe-97ef525c079e": {
       "id": "e72f8145-d2fd-4946-9abe-97ef525c079e",
       "position": [
-        0,
-        0.2,
+        -0.798268621533212,
+        0.6792425892402574,
         0
       ],
       "rotation": [
@@ -113,14 +113,14 @@
       "parentId": "88453035-dc0f-486d-868a-8ff7c2fda864",
       "components": {},
       "ui": {
-        "width": 220,
-        "height": 32,
-        "text": "TURN CLOCKWISE",
-        "color": "#6cf0b2",
-        "fontSize": 26,
+        "width": 70,
+        "height": 10,
+        "text": "",
+        "color": "#ffffff",
+        "fontSize": 12,
         "type": "3d"
       },
-      "name": "Canister Guide Text",
+      "name": "Text",
       "order": 2.884368279652997
     }
   },
