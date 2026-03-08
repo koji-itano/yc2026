@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+
 import { useEffect, useRef, useState } from 'react';
 
 type Quest = {
@@ -146,7 +146,7 @@ export default function CompanyPage() {
                     : 'Connecting…'}
               </span>
             </div>
-            <Link className="companyBackLink" href="/">← Back to map</Link>
+
           </div>
         </header>
 
