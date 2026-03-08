@@ -35,6 +35,27 @@ export type RankedCandidate = {
   worker: Worker;
 };
 
+export type AdminCandidate = {
+  id: string;
+  name: string;
+  title: string;
+  company: string;
+  location: string;
+  headline: string;
+  distanceLabel: string;
+  profileConfidence: "high" | "medium" | "low";
+  roleFitLabel: string;
+  reasons: string[];
+  score: number;
+  linkedinUrl?: string;
+};
+
+export type TaskRecommendation = {
+  task: AdminTask;
+  score: number;
+  reason: string;
+};
+
 const areaProximity: Record<string, Record<string, number>> = {
   Ginza: {
     Ginza: 1,
@@ -150,4 +171,65 @@ export function rankCandidates(task: AdminTask, workers: Worker[]): RankedCandid
       };
     })
     .sort((left, right) => right.score - left.score || right.worker.rating - left.worker.rating);
+}
+
+/**
+ * Inverse of rankCandidates — given a candidate profile, score every task
+ * and return the top `limit` recommendations.
+ */
+export function recommendTasksForCandidate(
+  candidate: AdminCandidate,
+  tasks: AdminTask[],
+  limit = 3,
+): TaskRecommendation[] {
+  const priorityPoints: Record<string, number> = { high: 20, medium: 10, low: 4 };
+
+  const candidateTokens = [
+    ...candidate.headline.toLowerCase().split(/\W+/),
+    ...candidate.title.toLowerCase().split(/\W+/),
+    ...candidate.roleFitLabel.toLowerCase().split(/\W+/),
+  ];
+
+  return tasks
+    .map((task) => {
+      const taskSkill = task.requiredSkill.toLowerCase();
+      const taskType = task.type.toLowerCase();
+
+      // Skill fit
+      const skillMatch = candidateTokens.includes(taskSkill)
+        ? 40
+        : candidateTokens.includes(taskType)
+          ? 25
+          : 8;
+
+      // Location fit (reuse existing proximity table)
+      const candidateArea = candidate.location.split(",")[0].trim();
+      const rawDistance = areaProximity[task.locationArea]?.[candidateArea] ?? 9;
+      const locationPoints =
+        rawDistance <= 1 ? 20 : rawDistance <= 3 ? 14 : rawDistance <= 5 ? 7 : 2;
+
+      // Priority weight
+      const priorityPts = priorityPoints[task.priority] ?? 4;
+
+      // Profile confidence bonus
+      const confidenceBonus =
+        candidate.profileConfidence === "high"
+          ? 10
+          : candidate.profileConfidence === "medium"
+            ? 5
+            : 0;
+
+      const score = skillMatch + locationPoints + priorityPts + confidenceBonus;
+
+      const reason =
+        skillMatch >= 40
+          ? `Strong skill match for ${task.requiredSkill}`
+          : skillMatch >= 25
+            ? `Good coverage for ${task.type} tasks`
+            : "Adjacent experience — worth exploring";
+
+      return { task, score, reason };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
 }
