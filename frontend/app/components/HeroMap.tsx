@@ -25,6 +25,7 @@ type AcceptanceLanguage = "en" | "ja";
 type AcceptanceState = "briefing" | "confirmed" | "declined" | "idle" | "listening" | "needs_help" | "speaking" | "thinking";
 type AcceptanceStatusHint = "confirmed" | "continue" | "declined" | "needs_help";
 type AcceptanceStep = "availability" | "briefing" | "eta" | "final" | "safety";
+type NoticePhase = "enter" | "exit";
 
 type AcceptanceReply = {
   assistantText: string;
@@ -45,6 +46,13 @@ type BrowserSpeechRecognition = {
 };
 
 type BrowserSpeechRecognitionCtor = new () => BrowserSpeechRecognition;
+
+type TaskNotice = {
+  id: string;
+  marker: QuestMarker;
+  phase: NoticePhase;
+  task: AdminTask;
+};
 
 const questMarkers = [
   {
@@ -87,6 +95,10 @@ const questMarkers = [
 const incomingTasks = incomingTasksData as AdminTask[];
 const initialVisibleMarkerLabels: QuestMarker["label"][] = [incomingTasks[0].markerLabel];
 const mapCenter: [number, number] = [139.7454, 35.6762];
+const TASK_NOTICE_ENTER_MS = 260;
+const TASK_NOTICE_HOLD_MS = 3000;
+const TASK_NOTICE_EXIT_MS = 320;
+const TASK_NOTICE_MAX_VISIBLE = 2;
 
 function buildMarkerElement(marker: QuestMarker, isActive = false) {
   const wrapper = document.createElement("div");
@@ -169,6 +181,7 @@ export function HeroMap() {
   const selectedLanguageRef = useRef<AcceptanceLanguage>("ja");
   const selectedTaskIdRef = useRef<string | null>(null);
   const textReplyRef = useRef<HTMLInputElement>(null);
+  const taskNoticeSeqRef = useRef(0);
 
   const [isReady, setIsReady] = useState(false);
   const [taskIndex, setTaskIndex] = useState(0);
@@ -184,17 +197,13 @@ export function HeroMap() {
   const [transcriptPreview, setTranscriptPreview] = useState("");
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<AcceptanceStep>("briefing");
+  const [taskNotices, setTaskNotices] = useState<TaskNotice[]>([]);
 
   const activeTask = incomingTasks[taskIndex % incomingTasks.length];
   const selectedTask = selectedTaskId ? incomingTasks.find((task) => task.id === selectedTaskId) ?? null : null;
   const highlightedMarkerLabel = selectedTask?.markerLabel ?? activeTask.markerLabel;
   const highlightedMarker =
     questMarkers.find((marker) => marker.label === highlightedMarkerLabel) ?? questMarkers[0];
-  const stackedTasks = [
-    activeTask,
-    incomingTasks[(taskIndex + 1) % incomingTasks.length],
-    incomingTasks[(taskIndex + 2) % incomingTasks.length],
-  ];
 
   useEffect(() => {
     conversationRef.current = conversation;
@@ -239,6 +248,32 @@ export function HeroMap() {
       return [...current, activeTask.markerLabel];
     });
   }, [activeTask.markerLabel]);
+
+  useEffect(() => {
+    const marker = questMarkers.find((item) => item.label === activeTask.markerLabel) ?? questMarkers[0];
+    const noticeId = `${activeTask.id}-${taskNoticeSeqRef.current}`;
+    taskNoticeSeqRef.current += 1;
+
+    setTaskNotices((current) => {
+      const next = [{ id: noticeId, marker, phase: "enter", task: activeTask }, ...current];
+      return next.slice(0, TASK_NOTICE_MAX_VISIBLE);
+    });
+
+    const exitTimer = window.setTimeout(() => {
+      setTaskNotices((current) =>
+        current.map((notice) => (notice.id === noticeId ? { ...notice, phase: "exit" } : notice)),
+      );
+    }, TASK_NOTICE_ENTER_MS + TASK_NOTICE_HOLD_MS);
+
+    const removeTimer = window.setTimeout(() => {
+      setTaskNotices((current) => current.filter((notice) => notice.id !== noticeId));
+    }, TASK_NOTICE_ENTER_MS + TASK_NOTICE_HOLD_MS + TASK_NOTICE_EXIT_MS);
+
+    return () => {
+      window.clearTimeout(exitTimer);
+      window.clearTimeout(removeTimer);
+    };
+  }, [activeTask]);
 
   useEffect(() => {
     if (!isAcceptanceOpen || !selectedTask || conversation.length > 0) {
@@ -479,6 +514,35 @@ export function HeroMap() {
       }
     });
   }, [visibleMarkerLabels]);
+
+  function focusTaskPin(task: AdminTask, markerLabel: QuestMarker["label"]) {
+    const map = mapRef.current;
+    const markerEntry = markersRef.current.find((item) => item.label === markerLabel);
+    const questMarker = questMarkers.find((item) => item.label === markerLabel);
+
+    stopRecognition();
+    stopAudioPlayback();
+    setIsAcceptanceOpen(false);
+    setAcceptanceState("idle");
+    setSelectedTaskId(task.id);
+    setVisibleMarkerLabels((current) => (current.includes(markerLabel) ? current : [...current, markerLabel]));
+    setTranscriptPreview("");
+    setVoiceError(null);
+
+    if (!map || !markerEntry || !questMarker) {
+      return;
+    }
+
+    map.flyTo([questMarker.coordinates[1], questMarker.coordinates[0]], Math.max(map.getZoom(), 15), {
+      animate: true,
+      duration: 0.85,
+    });
+    markerEntry.marker.openPopup();
+  }
+
+  function dismissTaskNotice(noticeId: string) {
+    setTaskNotices((current) => current.filter((notice) => notice.id !== noticeId));
+  }
 
   function stopRecognition() {
     recognitionRef.current?.stop();
@@ -748,16 +812,15 @@ export function HeroMap() {
 
   return (
     <>
-      <div aria-hidden="true" className="taskIngressLayer">
-        <div className="taskNoticeStack" key={activeTask.id}>
-          {stackedTasks.map((task, index) => {
-            const marker = questMarkers.find((item) => item.label === task.markerLabel) ?? highlightedMarker;
+      <div className="taskIngressLayer">
+        <div className="taskNoticeStack">
+          {taskNotices.map((notice, index) => {
             const isCurrent = index === 0;
-
+            const { marker, task } = notice;
             return (
               <div
-                className={`taskNoticeCard${isCurrent ? " taskNoticeCardCurrent" : ""}`}
-                key={`${task.id}-${index}`}
+                className={`taskNoticeCard taskNoticeCard${notice.phase === "enter" ? "Enter" : "Exit"}${isCurrent ? " taskNoticeCardCurrent" : ""}`}
+                key={notice.id}
                 style={
                   {
                     "--task-accent": marker.accent,
@@ -766,24 +829,38 @@ export function HeroMap() {
                   } as CSSProperties
                 }
               >
-                <div className="taskNoticeHeader">
-                  <span className="taskNoticeApp">Slack</span>
-                  <span className="taskNoticeTime">{task.eta}</span>
-                </div>
-                <div className="taskNoticeMeta">
-                  <span className="taskNoticeChannel">#ops-live</span>
-                  <span className="taskNoticeBadge">{marker.label}</span>
-                </div>
-                <div className="taskNoticeBody">
-                  <strong>{task.title}</strong>
-                  <p>
-                    {task.type} task opened for {task.location}. {task.reward}
-                  </p>
-                </div>
-                <div className="taskNoticeFooter">
-                  <span>{task.lane}</span>
-                  <span>{isCurrent ? "new task" : "queued"}</span>
-                </div>
+                <button
+                  className="taskNoticeDismiss"
+                  onClick={() => dismissTaskNotice(notice.id)}
+                  aria-label="Dismiss notification"
+                  type="button"
+                >
+                  ×
+                </button>
+                <button
+                  className="taskNoticeCardAction"
+                  onClick={() => focusTaskPin(task, marker.label)}
+                  type="button"
+                >
+                  <div className="taskNoticeHeader">
+                    <span className="taskNoticeApp">Slack</span>
+                    <span className="taskNoticeTime">{task.eta}</span>
+                  </div>
+                  <div className="taskNoticeMeta">
+                    <span className="taskNoticeChannel">#ops-live</span>
+                    <span className="taskNoticeBadge">{marker.label}</span>
+                  </div>
+                  <div className="taskNoticeBody">
+                    <strong>{task.title}</strong>
+                    <p>
+                      {task.type} task opened for {task.location}. {task.reward}
+                    </p>
+                  </div>
+                  <div className="taskNoticeFooter">
+                    <span>{task.lane}</span>
+                    <span>{isCurrent ? "view pin" : "queued"}</span>
+                  </div>
+                </button>
               </div>
             );
           })}
