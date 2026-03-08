@@ -710,6 +710,220 @@ textarea {
   display: none;
 }
 
+.acceptanceSheet {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  z-index: 4;
+  max-width: 680px;
+  margin-left: auto;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(9, 14, 30, 0.94) 0%, rgba(5, 8, 20, 0.96) 100%);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+}
+
+.acceptanceSheetHandle {
+  width: 52px;
+  height: 5px;
+  margin: 0 auto 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.acceptanceSheetHeader,
+.acceptanceLanguageRow,
+.acceptanceStatusRow,
+.acceptanceActions,
+.acceptanceTextReply {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.acceptanceSheetHeader {
+  align-items: flex-start;
+}
+
+.acceptanceEyebrow {
+  display: inline-block;
+  color: #9fd4ff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.acceptanceSheetHeader h2 {
+  margin: 10px 0 0;
+  color: #f8fbff;
+  font-size: 1.4rem;
+  line-height: 1.05;
+}
+
+.acceptanceSheetHeader p,
+.acceptanceFooterNote,
+.acceptanceBrief p {
+  margin: 8px 0 0;
+  color: #aeb8d2;
+  line-height: 1.5;
+}
+
+.acceptanceCloseButton,
+.acceptanceLanguageButton,
+.acceptanceSecondaryButton {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #f8fbff;
+  cursor: pointer;
+}
+
+.acceptanceLanguageRow {
+  margin-top: 14px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.acceptanceLanguageButtonActive {
+  background: rgba(78, 140, 255, 0.18);
+  border-color: rgba(78, 140, 255, 0.4);
+}
+
+.acceptanceSpeechToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #d5dcf3;
+  font-size: 0.84rem;
+}
+
+.acceptanceStatusRow {
+  margin-top: 14px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.acceptanceStateChip,
+.acceptanceStateMeta {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #dce5ff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.acceptanceBrief,
+.acceptanceConversation {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.acceptanceBrief strong {
+  color: #f8fbff;
+}
+
+.acceptanceConversation {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.acceptanceBubble {
+  max-width: 88%;
+  padding: 12px 14px;
+  border-radius: 18px;
+  line-height: 1.55;
+}
+
+.acceptanceBubble + .acceptanceBubble,
+.acceptanceTranscript,
+.acceptanceError {
+  margin-top: 10px;
+}
+
+.acceptanceBubbleAssistant {
+  background: rgba(78, 140, 255, 0.14);
+  color: #eff4ff;
+}
+
+.acceptanceBubbleUser {
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.acceptanceTranscript {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #b8c4e2;
+  font-size: 0.9rem;
+}
+
+.acceptanceError {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(190, 24, 93, 0.18);
+  color: #ffd6e5;
+}
+
+.acceptanceActions {
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.acceptancePrimaryButton {
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #4e8cff 0%, #41e4ff 100%);
+  color: #04101d;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.acceptancePrimaryButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.acceptanceTextReply {
+  margin-top: 14px;
+}
+
+.acceptanceTextReply input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.acceptanceTextReply input::placeholder {
+  color: #92a1c6;
+}
+
+.acceptanceFooterNote {
+  margin-top: 14px;
+  font-size: 0.86rem;
+}
+
 .mapFallback {
   position: absolute;
   inset: 0;
@@ -943,6 +1157,18 @@ textarea {
   font-size: 0.74rem;
 }
 
+.questPopupAction {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #4e8cff 0%, #41e4ff 100%);
+  color: #04101d;
+  cursor: pointer;
+  font-weight: 800;
+}
+
 .heroOnly .heroCopy {
   max-width: 560px;
 }
@@ -1079,6 +1305,28 @@ textarea {
 }
 
 @media (max-width: 720px) {
+  .acceptanceSheet {
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    padding: 12px;
+    border-radius: 24px;
+  }
+
+  .acceptanceSheetHeader,
+  .acceptanceLanguageRow,
+  .acceptanceActions,
+  .acceptanceTextReply {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .acceptanceCloseButton,
+  .acceptancePrimaryButton,
+  .acceptanceSecondaryButton {
+    width: 100%;
+  }
+
   .adminShell {
     padding: 12px;
   }
