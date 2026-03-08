@@ -1,0 +1,82 @@
+[
+  {
+    "id": "worker-aiko",
+    "name": "Aiko Tanaka",
+    "skills": ["Navigation", "Dispatch", "Accessibility"],
+    "homeArea": "Shibuya",
+    "availability": "available",
+    "rating": 4.9,
+    "languages": ["Japanese", "English"],
+    "currentLoad": 1
+  },
+  {
+    "id": "worker-ren",
+    "name": "Ren Sato",
+    "skills": ["Dispatch", "Inspection", "Retail Ops"],
+    "homeArea": "Shinjuku",
+    "availability": "available",
+    "rating": 4.7,
+    "languages": ["Japanese"],
+    "currentLoad": 2
+  },
+  {
+    "id": "worker-hina",
+    "name": "Hina Mori",
+    "skills": ["Tourism", "Hospitality", "Luxury Retail"],
+    "homeArea": "Ginza",
+    "availability": "available",
+    "rating": 4.8,
+    "languages": ["Japanese", "English", "Chinese"],
+    "currentLoad": 1
+  },
+  {
+    "id": "worker-daichi",
+    "name": "Daichi Kato",
+    "skills": ["Inspection", "Safety", "Retail Ops"],
+    "homeArea": "Marunouchi",
+    "availability": "busy",
+    "rating": 4.6,
+    "languages": ["Japanese", "English"],
+    "currentLoad": 3
+  },
+  {
+    "id": "worker-mei",
+    "name": "Mei Kobayashi",
+    "skills": ["Field Research", "Navigation", "User Interviews"],
+    "homeArea": "Minato",
+    "availability": "available",
+    "rating": 4.9,
+    "languages": ["Japanese", "English"],
+    "currentLoad": 0
+  },
+  {
+    "id": "worker-yuto",
+    "name": "Yuto Nakahara",
+    "skills": ["Dispatch", "Navigation", "Tourism"],
+    "homeArea": "Shibuya",
+    "availability": "busy",
+    "rating": 4.5,
+    "languages": ["Japanese", "English"],
+    "currentLoad": 4
+  },
+  {
+    "id": "worker-emi",
+    "name": "Emi Fujita",
+    "skills": ["Tourism", "Field Research", "Hospitality"],
+    "homeArea": "Minato",
+    "availability": "available",
+    "rating": 4.7,
+    "languages": ["Japanese", "English", "Korean"],
+    "currentLoad": 1
+  },
+  {
+    "id": "worker-sho",
+    "name": "Sho Watanabe",
+    "skills": ["Inspection", "Dispatch", "Navigation"],
+    "homeArea": "Ueno",
+    "availability": "offline",
+    "rating": 4.4,
+    "languages": ["Japanese"],
+    "currentLoad": 2
+  }
+]
