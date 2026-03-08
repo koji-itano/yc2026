@@ -1,0 +1,31 @@
+{
+  "imagePath": "image-targets/itoen-bottle_luminance.jpg",
+  "metadata": null,
+  "name": "itoen-bottle",
+  "type": "CYLINDER",
+  "properties": {
+    "left": 0,
+    "top": 721,
+    "width": 1082,
+    "height": 1443,
+    "isRotated": false,
+    "originalWidth": 1082,
+    "originalHeight": 2885,
+    "targetCircumferenceTop": 210,
+    "cylinderCircumferenceTop": 210,
+    "cylinderCircumferenceBottom": 210,
+    "cylinderSideLength": 559.9353049907578,
+    "arcAngle": 360,
+    "coniness": 0,
+    "inputMode": "ADVANCED",
+    "unit": "mm"
+  },
+  "resources": {
+    "originalImage": "itoen-bottle_original.jpg",
+    "croppedImage": "itoen-bottle_cropped.jpg",
+    "thumbnailImage": "itoen-bottle_thumbnail.jpg",
+    "luminanceImage": "itoen-bottle_luminance.jpg"
+  },
+  "created": 1772952324769,
+  "updated": 1772952324769
+}

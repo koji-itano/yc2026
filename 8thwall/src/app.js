@@ -1,4 +1,4 @@
-import itoenLabelTarget from '../image-targets/itoen-label.json'
+import itoenBottleTarget from '../image-targets/itoen-bottle.json'
 import canisterCapTarget from '../image-targets/canister-cap.json'
 
 const state = {
@@ -20,8 +20,8 @@ const state = {
   proofRecord: null,
   eventLog: [],
   imageTargetsConfigured: [],
-  activeTargetProfile: "itoen-label",
-  activeTargetLabel: "Ito En label",
+  activeTargetProfile: "itoen-bottle",
+  activeTargetLabel: "Ito En bottle front",
   cameraStatus: "booting",
   desktopWebcamEnabled: false,
   desktopStream: null,
@@ -56,11 +56,11 @@ function recordEvent(type, detail = {}) {
 
 function getTargetProfiles() {
   return {
-    "itoen-label": {
-      label: "Ito En label",
-      targets: [itoenLabelTarget],
-      waitingTitle: "Use the flat Ito En label",
-      waitingBody: "Hold the printed Ito En label flat, centered, and fill about half the frame.",
+    "itoen-bottle": {
+      label: "Ito En bottle front",
+      targets: [itoenBottleTarget],
+      waitingTitle: "Use the real Ito En bottle front",
+      waitingBody: "Center the bottle front, keep it upright, and fill about half the frame with the green label.",
     },
     "canister-cap": {
       label: "Canister cap photo",
@@ -70,9 +70,9 @@ function getTargetProfiles() {
     },
     all: {
       label: "All targets",
-      targets: [itoenLabelTarget, canisterCapTarget],
-      waitingTitle: "Use the Ito En label first",
-      waitingBody: "Start with the flat Ito En label. It is more stable than the canister photo target.",
+      targets: [itoenBottleTarget, canisterCapTarget],
+      waitingTitle: "Use the Ito En bottle first",
+      waitingBody: "Start with the real Ito En bottle front. If it misses, switch to the canister photo target.",
     },
   }
 }
@@ -86,7 +86,7 @@ function getRequestedTargetProfile() {
     return requested
   }
 
-  return isDesktopBrowser() ? "all" : "itoen-label"
+  return isDesktopBrowser() ? "all" : "itoen-bottle"
 }
 
 function ensureOverlay() {
@@ -696,7 +696,7 @@ function ensureOverlay() {
       <div class="rpg-chip-row">
         <span class="rpg-chip" id="rpg-target-found-chip">Image target: waiting</span>
         <span class="rpg-chip" id="rpg-status-chip">Status: booting</span>
-        <span class="rpg-chip" id="rpg-expected-target-chip">Expected: Ito En label</span>
+        <span class="rpg-chip" id="rpg-expected-target-chip">Expected: Ito En bottle front</span>
         <span class="rpg-chip" id="rpg-target-chip">Target: waiting</span>
         <span class="rpg-chip" id="rpg-camera-chip">Camera: booting</span>
         <button id="rpg-focus-button" class="rpg-focus-toggle" type="button">Hide controls</button>
@@ -705,9 +705,9 @@ function ensureOverlay() {
     <div class="rpg-detection-guide" id="rpg-detection-guide">
       <div class="rpg-detection-frame" aria-hidden="true"></div>
       <div class="rpg-detection-copy">
-        <p class="rpg-detection-title" id="rpg-detection-title">Use the flat Ito En label</p>
+        <p class="rpg-detection-title" id="rpg-detection-title">Use the real Ito En bottle front</p>
         <p class="rpg-detection-body" id="rpg-detection-body">
-          Hold the printed Ito En label flat, centered, and fill about half the frame.
+          Center the bottle front, keep it upright, and fill about half the frame with the green label.
         </p>
       </div>
     </div>
