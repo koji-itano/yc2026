@@ -1,0 +1,22 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" rx="28" fill="#FFF7EA"/>
+  <rect x="18" y="18" width="604" height="384" rx="22" fill="#142028" stroke="#FF6B2C" stroke-width="8"/>
+  <rect x="44" y="44" width="552" height="332" rx="16" fill="#FFF4E2"/>
+  <path d="M64 76H576" stroke="#FF6B2C" stroke-width="18" stroke-dasharray="18 14"/>
+  <path d="M64 344H576" stroke="#FF6B2C" stroke-width="18" stroke-dasharray="18 14"/>
+  <circle cx="320" cy="210" r="112" fill="#FF6B2C"/>
+  <circle cx="320" cy="210" r="72" fill="#142028"/>
+  <circle cx="320" cy="210" r="30" fill="#FFF4E2"/>
+  <path d="M238 210H402" stroke="#FFF4E2" stroke-width="12"/>
+  <path d="M320 128V292" stroke="#FFF4E2" stroke-width="12"/>
+  <rect x="94" y="124" width="112" height="42" rx="12" fill="#142028"/>
+  <rect x="434" y="124" width="112" height="42" rx="12" fill="#142028"/>
+  <rect x="94" y="254" width="112" height="42" rx="12" fill="#142028"/>
+  <rect x="434" y="254" width="112" height="42" rx="12" fill="#142028"/>
+  <text x="320" y="82" text-anchor="middle" fill="#142028" font-size="28" font-family="Arial, sans-serif" font-weight="700" letter-spacing="4">
+    CANISTER TABLETOP TARGET
+  </text>
+  <text x="320" y="352" text-anchor="middle" fill="#142028" font-size="24" font-family="Arial, sans-serif" font-weight="700" letter-spacing="3">
+    ALIGN PHONE AND LOCK CAP PROOF
+  </text>
+</svg>

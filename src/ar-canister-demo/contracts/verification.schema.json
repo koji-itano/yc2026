@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rpg.local/schemas/verification.schema.json",
+  "title": "Real Physical Gigs Verification Update",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventType",
+    "sessionId",
+    "taskId",
+    "workerId",
+    "provider",
+    "taskClass",
+    "attemptNumber",
+    "result",
+    "note",
+    "verifiedAt"
+  ],
+  "properties": {
+    "eventType": {
+      "type": "string",
+      "const": "rpg:verification-updated"
+    },
+    "sessionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "taskId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workerId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provider": {
+      "type": "string",
+      "enum": ["8thwall", "mindar", "manual"]
+    },
+    "taskClass": {
+      "type": "string",
+      "enum": ["green task", "yellow task", "red task"]
+    },
+    "attemptNumber": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "result": {
+      "type": "string",
+      "enum": ["verified", "needs_retry"]
+    },
+    "note": {
+      "type": "string"
+    },
+    "verifiedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

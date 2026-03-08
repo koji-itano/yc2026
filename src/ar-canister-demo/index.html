@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="Phone-based AR guidance prototype for the tabletop canister task."
+    />
+    <title>Canister AR Guidance</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Real Physical Gigs</p>
+        <h1>Canister secure check</h1>
+        <p class="subtitle">
+          Phone-first worker guidance with proof capture for the tabletop
+          canister task.
+        </p>
+        <div class="status-row">
+          <span class="chip">Scope: green task</span>
+          <span class="chip" id="providerChip">Provider: detecting</span>
+          <span class="chip" id="statusChip">Ready</span>
+        </div>
+      </section>
+
+      <section class="meta-card">
+        <div class="meta-block">
+          <p class="eyebrow">Task metadata</p>
+          <dl class="meta-grid">
+            <div>
+              <dt>Task ID</dt>
+              <dd id="taskIdValue">canister-cap-secure</dd>
+            </div>
+            <div>
+              <dt>Worker ID</dt>
+              <dd id="workerIdValue">worker-demo-01</dd>
+            </div>
+            <div>
+              <dt>Session ID</dt>
+              <dd id="sessionIdValue">pending</dd>
+            </div>
+            <div>
+              <dt>Handoff mode</dt>
+              <dd id="handoffModeValue">local dashboard event</dd>
+            </div>
+            <div>
+              <dt>Task class</dt>
+              <dd id="taskClassValue">green task</dd>
+            </div>
+            <div>
+              <dt>Attempt</dt>
+              <dd id="attemptValue">0</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="camera-card">
+        <div class="camera-stage">
+          <video id="cameraFeed" autoplay playsinline muted></video>
+          <canvas id="captureCanvas" aria-hidden="true"></canvas>
+          <div class="camera-fallback" id="cameraFallback">
+            <p>Camera preview will appear here.</p>
+            <p>Use the fallback anchor if browser permissions or AR SDKs are unavailable.</p>
+          </div>
+
+          <div class="frame-guide">
+            <span class="frame-label">Target frame</span>
+          </div>
+
+          <div class="anchor-card hidden" id="anchorCard">
+            <p class="anchor-label">Anchored instruction</p>
+            <p class="anchor-instruction">Turn clockwise to secure the cap.</p>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <button id="startButton" class="primary">Start session</button>
+          <button id="lockButton">Lock fallback anchor</button>
+          <button id="simulate8thWallButton">Simulate 8th Wall target</button>
+          <button id="simulateMindARButton">Simulate MindAR target</button>
+          <button id="beforeButton">Capture before</button>
+          <button id="completeActionButton">Mark cap secured</button>
+          <button id="afterButton">Capture after</button>
+          <button id="proofButton">Generate proof record</button>
+          <button id="resetButton">Reset</button>
+        </div>
+      </section>
+
+      <section class="task-card">
+        <div class="task-copy">
+          <p class="eyebrow">Worker flow</p>
+          <h2>Step 2 of 3</h2>
+          <p class="task-title">Canister cap secure confirmation</p>
+          <p class="task-instruction">Turn clockwise to secure the cap.</p>
+          <p class="task-note">
+            Keep both the canister cap and the tabletop target card in frame
+            before capturing proof.
+          </p>
+        </div>
+        <div class="target-preview">
+          <img
+            src="./assets/canister-target-card.svg"
+            alt="Printable target card for the tabletop canister demo"
+          />
+        </div>
+      </section>
+
+      <section class="evidence-grid">
+        <article class="evidence-card">
+          <div class="evidence-header">
+            <p class="eyebrow">Before proof</p>
+            <p id="beforeMeta">Not captured</p>
+          </div>
+          <img id="beforeImage" alt="Before proof capture" />
+        </article>
+        <article class="evidence-card">
+          <div class="evidence-header">
+            <p class="eyebrow">After proof</p>
+            <p id="afterMeta">Not captured</p>
+          </div>
+          <img id="afterImage" alt="After proof capture" />
+        </article>
+      </section>
+
+      <section class="proof-card">
+        <div class="proof-header">
+          <div>
+            <p class="eyebrow">Worker proof flow</p>
+            <h2>Proof package ready for dashboard handoff</h2>
+          </div>
+          <ol class="step-list">
+            <li id="stepSession">Session opened</li>
+            <li id="stepAnchor">Anchor locked</li>
+            <li id="stepBefore">Before captured</li>
+            <li id="stepAction">Action completed</li>
+            <li id="stepAfter">After captured</li>
+            <li id="stepProof">Proof submitted</li>
+          </ol>
+        </div>
+        <div class="control-row proof-actions">
+          <button id="copyProofButton">Copy proof JSON</button>
+          <button id="downloadProofButton">Download proof JSON</button>
+          <button id="dispatchProofButton">Dispatch dashboard handoff</button>
+        </div>
+        <pre id="proofOutput">Generate a proof record after capturing before and after evidence.</pre>
+      </section>
+
+      <section class="dashboard-card">
+        <div class="proof-header">
+          <div>
+            <p class="eyebrow">Execution timeline</p>
+            <h2>Worker event log</h2>
+          </div>
+          <span class="chip" id="eventCountChip">Events: 0</span>
+        </div>
+        <pre id="eventLogOutput">Session events will appear here.</pre>
+      </section>
+
+      <section class="dashboard-card">
+        <div class="proof-header">
+          <div>
+            <p class="eyebrow">Dashboard handoff</p>
+            <h2>Worker proof integration state</h2>
+          </div>
+          <span class="chip" id="handoffStatusChip">Awaiting proof package</span>
+        </div>
+        <p class="dashboard-note" id="handoffSummary">
+          No proof record has been dispatched yet.
+        </p>
+        <pre id="dashboardOutput">Dispatch a proof package to populate the dashboard handoff preview.</pre>
+      </section>
+
+      <section class="dashboard-card">
+        <div class="proof-header">
+          <div>
+            <p class="eyebrow">Verification loop</p>
+            <h2>Dashboard response to worker</h2>
+          </div>
+          <span class="chip" id="verificationStatusChip">Awaiting dashboard review</span>
+        </div>
+        <p class="dashboard-note" id="verificationSummary">
+          No verification result has been returned from the dashboard yet.
+        </p>
+        <pre id="verificationOutput">Dashboard verification updates will appear here.</pre>
+      </section>
+    </main>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>

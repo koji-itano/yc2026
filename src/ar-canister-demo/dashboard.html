@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="Dashboard receiver for canister AR worker proof handoff."
+    />
+    <title>Canister Proof Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell dashboard-shell">
+      <section class="hero dashboard-hero">
+        <div class="hero-row">
+          <div>
+            <p class="eyebrow">Real Physical Gigs Dashboard</p>
+            <h1>Worker proof handoff</h1>
+            <p class="subtitle">
+              Receives the canister AR proof package from the worker mobile flow
+              and surfaces it for verification.
+            </p>
+          </div>
+          <div class="status-row">
+            <span class="chip">Scope: green task</span>
+            <span class="chip" id="receiverStatusChip">Waiting for worker handoff</span>
+            <span class="chip" id="receiverRouteChip">Route: browser channels</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="meta-card">
+        <div class="meta-block">
+          <p class="eyebrow">Active proof package</p>
+          <dl class="meta-grid">
+            <div>
+              <dt>Task ID</dt>
+              <dd id="dashboardTaskId">No handoff yet</dd>
+            </div>
+            <div>
+              <dt>Worker ID</dt>
+              <dd id="dashboardWorkerId">No handoff yet</dd>
+            </div>
+            <div>
+              <dt>Provider</dt>
+              <dd id="dashboardProvider">No handoff yet</dd>
+            </div>
+            <div>
+              <dt>Result</dt>
+              <dd id="dashboardResult">Awaiting proof</dd>
+            </div>
+            <div>
+              <dt>Task class</dt>
+              <dd id="dashboardTaskClass">Awaiting proof</dd>
+            </div>
+            <div>
+              <dt>Attempt</dt>
+              <dd id="dashboardAttempt">Awaiting proof</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="proof-card">
+        <div class="proof-header">
+          <div>
+            <p class="eyebrow">Verification summary</p>
+            <h2 id="dashboardSummaryTitle">Proof package ready for verification</h2>
+          </div>
+          <button id="refreshButton" class="primary">Reload latest handoff</button>
+        </div>
+        <p class="dashboard-note" id="dashboardSummary">
+          Open the worker page and dispatch a proof package to populate this dashboard.
+        </p>
+        <div class="control-row proof-actions">
+          <button id="verifyButton" class="primary">Mark verified</button>
+          <button id="retryButton">Needs retry</button>
+        </div>
+        <label class="note-field" for="verificationNoteInput">
+          <span>Verification note</span>
+          <textarea
+            id="verificationNoteInput"
+            rows="3"
+            placeholder="Example: Re-center the target card and capture the after proof again."
+          ></textarea>
+        </label>
+        <p class="dashboard-note" id="verificationActionSummary">
+          Choose a verification outcome after reviewing the proof package.
+        </p>
+      </section>
+
+      <section class="evidence-grid evidence-pair">
+        <article class="evidence-card">
+          <div class="evidence-header">
+            <p class="eyebrow">Before evidence</p>
+            <p id="dashboardBeforeMeta">Not available</p>
+          </div>
+          <img id="dashboardBeforeImage" alt="Worker before evidence" />
+        </article>
+        <article class="evidence-card">
+          <div class="evidence-header">
+            <p class="eyebrow">After evidence</p>
+            <p id="dashboardAfterMeta">Not available</p>
+          </div>
+          <img id="dashboardAfterImage" alt="Worker after evidence" />
+        </article>
+      </section>
+
+      <section class="dashboard-card">
+        <div class="proof-header">
+          <div>
+            <p class="eyebrow">Audit payload</p>
+            <h2>Structured handoff record</h2>
+          </div>
+          <span class="chip" id="dashboardEventChip">Event: rpg:proof-ready</span>
+        </div>
+        <pre id="dashboardPayload">Awaiting structured proof handoff.</pre>
+      </section>
+
+      <section class="dashboard-card">
+        <div class="proof-header">
+          <div>
+            <p class="eyebrow">Execution timeline</p>
+            <h2>Worker session events</h2>
+          </div>
+          <span class="chip" id="dashboardEventCountChip">Events: 0</span>
+        </div>
+        <pre id="dashboardEventLog">Awaiting worker session events.</pre>
+      </section>
+    </main>
+
+    <script src="./dashboard.js" type="module"></script>
+  </body>
+</html>

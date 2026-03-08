@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="Operator control page for the canister AR demo."
+    />
+    <title>Canister Demo Control</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell dashboard-shell">
+      <section class="hero dashboard-hero">
+        <div class="hero-row">
+          <div>
+            <p class="eyebrow">Real Physical Gigs Control</p>
+            <h1>Demo launch console</h1>
+            <p class="subtitle">
+              Launch the worker mobile flow and dashboard receiver with matched
+              task metadata for the canister AR demo.
+            </p>
+          </div>
+          <div class="status-row">
+            <span class="chip">Worker: phone</span>
+            <span class="chip">Dashboard: laptop</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="meta-card">
+        <div class="meta-block">
+          <p class="eyebrow">Launch settings</p>
+          <form class="launch-grid" id="launchForm">
+            <label>
+              <span>Task ID</span>
+              <input id="taskIdInput" name="taskId" value="WIL-9-canister" />
+            </label>
+            <label>
+              <span>Task label</span>
+              <input id="taskLabelInput" name="taskLabel" value="Canister secure check" />
+            </label>
+            <label>
+              <span>Worker ID</span>
+              <input id="workerIdInput" name="workerId" value="worker-07" />
+            </label>
+            <label>
+              <span>Task class</span>
+              <select id="taskClassInput" name="taskClass">
+                <option value="green task">green task</option>
+                <option value="yellow task">yellow task</option>
+                <option value="red task">red task</option>
+              </select>
+            </label>
+            <label>
+              <span>Instruction</span>
+              <input
+                id="instructionInput"
+                name="instruction"
+                value="Turn clockwise to secure the cap."
+              />
+            </label>
+            <label>
+              <span>Demo provider</span>
+              <select id="demoProviderInput" name="demoProvider">
+                <option value="8thwall">8th Wall</option>
+                <option value="mindar">MindAR</option>
+                <option value="manual">Manual fallback</option>
+              </select>
+            </label>
+            <label>
+              <span>Launch mode</span>
+              <select id="launchModeInput" name="launchMode">
+                <option value="manual">Manual review</option>
+                <option value="scripted">Scripted autoplay</option>
+              </select>
+            </label>
+            <label>
+              <span>Proof endpoint</span>
+              <input
+                id="proofEndpointInput"
+                name="proofEndpoint"
+                value="https://example.test/handoff"
+              />
+            </label>
+            <label>
+              <span>Auto verification result</span>
+              <select id="autoVerifyResultInput" name="autoVerifyResult">
+                <option value="verified">verified</option>
+                <option value="needs_retry">needs_retry</option>
+              </select>
+            </label>
+            <label>
+              <span>Auto verification note</span>
+              <input
+                id="autoVerifyNoteInput"
+                name="autoVerifyNote"
+                value="Verification passed with clear after-state evidence."
+              />
+            </label>
+            <label class="checkbox-row">
+              <input id="autoStartInput" type="checkbox" checked />
+              <span>Auto-start worker session</span>
+            </label>
+            <label class="checkbox-row">
+              <input id="autoAnchorInput" type="checkbox" checked />
+              <span>Auto-lock selected provider</span>
+            </label>
+          </form>
+        </div>
+      </section>
+
+      <section class="proof-card">
+        <div class="proof-header">
+          <div>
+            <p class="eyebrow">Launch links</p>
+            <h2>Open the matched demo surfaces</h2>
+          </div>
+          <button id="refreshLinksButton" class="primary">Refresh links</button>
+        </div>
+        <div class="control-row proof-actions">
+          <button id="openWorkerButton">Open worker view</button>
+          <button id="copyWorkerButton">Copy worker URL</button>
+          <button id="openDashboardButton">Open dashboard view</button>
+          <button id="copyDashboardButton">Copy dashboard URL</button>
+        </div>
+        <pre id="workerUrlOutput">Worker URL will appear here.</pre>
+        <pre id="dashboardUrlOutput">Dashboard URL will appear here.</pre>
+      </section>
+
+      <section class="dashboard-card">
+        <div class="proof-header">
+          <div>
+            <p class="eyebrow">Operator notes</p>
+            <h2>Suggested sequence</h2>
+          </div>
+        </div>
+        <ol class="step-list control-steps">
+          <li>Open the dashboard on the laptop first.</li>
+          <li>Open the worker link on the phone.</li>
+          <li>Confirm the selected provider and task metadata.</li>
+          <li>Capture before and after proof on the worker device.</li>
+          <li>Dispatch the dashboard handoff and confirm receipt on the laptop.</li>
+        </ol>
+      </section>
+    </main>
+
+    <script src="./control.js" type="module"></script>
+  </body>
+</html>
