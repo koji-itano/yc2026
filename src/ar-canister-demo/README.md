@@ -1,19 +1,19 @@
-# AR Canister Demo
+# Yaorozu God OS AR Canister Demo
 
-Lightweight mobile web prototype for `WIL-9`.
+Lightweight mobile web prototype for `WIL-9` aligned to the Yaorozu God OS demo.
 
 ## What it covers
 
 - phone camera access,
 - `8th Wall -> MindAR -> manual` provider selection,
-- anchored instruction overlay,
+- anchored quest instruction overlay,
 - before/after proof capture,
 - structured proof record generation,
-- dashboard-ready proof handoff,
+- dashboard-ready quest proof handoff,
 - worker and dashboard event timelines.
 - optional scripted autoplay mode for demo fallback.
 
-The repo does not contain licensed 8th Wall assets, so the default runnable path is the manual tabletop anchor. If `window.XR8` or `window.MINDAR` is present, the same UI can accept image-target callbacks through the bridge examples.
+The repo does not contain licensed 8th Wall assets, so the default runnable path is the manual quest anchor. If `window.XR8` or `window.MINDAR` is present, the same UI can accept image-target callbacks through the bridge examples.
 
 For the real 8th Wall completion checklist, see:
 

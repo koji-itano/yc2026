@@ -12,7 +12,7 @@ const state = {
   appRole: readAppRole(),
   sessionId: newSessionId(),
   taskId: "WIL-9-canister",
-  taskLabel: "Canister secure check",
+  taskLabel: "Quest execution check",
   workerId: "worker-07",
   instruction: "Turn clockwise to secure the cap.",
   taskClass: "green task",
@@ -237,11 +237,11 @@ function formatTargetName(name) {
 function buildWorkerOverlayHtml() {
   return `
     <section class="rpg-topbar">
-      <p class="rpg-eyebrow">Real Physical Gigs x 8th Wall</p>
-      <h1 class="rpg-title">Canister AR guidance</h1>
+      <p class="rpg-eyebrow">Yaorozu God OS x 8th Wall</p>
+      <h1 class="rpg-title">Quest execution AR</h1>
       <p class="rpg-subtitle">
-        Tabletop worker flow for tightening the canister cap, capturing before/after proof, and
-        handing a structured record back to the dashboard.
+        Worker-side guidance for an AI-dispatched physical quest: track the target, capture
+        before/after proof, and hand the audit package to the dashboard.
       </p>
       <div class="rpg-chip-row">
         <span class="rpg-chip" id="rpg-target-found-chip">Image target: waiting</span>
@@ -267,7 +267,7 @@ function buildWorkerOverlayHtml() {
     </div>
     <div class="rpg-main">
       <section class="rpg-card">
-        <p class="rpg-eyebrow">Worker task</p>
+        <p class="rpg-eyebrow">Worker quest</p>
         <h2>Turn clockwise to secure the cap.</h2>
         <dl class="rpg-meta">
           <div>
@@ -311,8 +311,8 @@ function buildWorkerOverlayHtml() {
         </div>
       </section>
       <section class="rpg-proof">
-        <p class="rpg-eyebrow">Structured handoff</p>
-        <h2>Proof package</h2>
+        <p class="rpg-eyebrow">Structured audit handoff</p>
+        <h2>Quest proof package</h2>
         <pre id="rpg-proof-output">Capture before/after evidence to generate a proof package.</pre>
         <div class="rpg-log" id="rpg-log"></div>
       </section>
@@ -323,10 +323,10 @@ function buildWorkerOverlayHtml() {
 function buildDashboardOverlayHtml() {
   return `
     <section class="rpg-topbar">
-      <p class="rpg-eyebrow">Real Physical Gigs x 8th Wall</p>
-      <h1 class="rpg-title">Proof receiver dashboard</h1>
+      <p class="rpg-eyebrow">Yaorozu God OS x 8th Wall</p>
+      <h1 class="rpg-title">Quest audit dashboard</h1>
       <p class="rpg-subtitle">
-        Review worker proof, inspect before/after evidence, and return a verification result to the phone.
+        Review worker proof, inspect before/after evidence, and return a verification result to the worker flow.
       </p>
       <div class="rpg-chip-row">
         <span class="rpg-chip" id="rpg-receiver-status-chip">Waiting for worker handoff</span>
@@ -336,8 +336,8 @@ function buildDashboardOverlayHtml() {
     </section>
     <div class="rpg-dashboard-main">
       <section class="rpg-card">
-        <p class="rpg-eyebrow">Incoming proof</p>
-        <h2 id="rpg-dashboard-summary-title">Proof package ready for verification</h2>
+        <p class="rpg-eyebrow">Incoming quest proof</p>
+        <h2 id="rpg-dashboard-summary-title">Quest proof package ready for verification</h2>
         <dl class="rpg-meta">
           <div>
             <dt>Task ID</dt>
@@ -1774,7 +1774,7 @@ function buildHandoffRecord() {
     eventType: "rpg:proof-ready",
     issuedAt: nowIso(),
     route: "server event bus",
-    summary: "AR guidance complete. Proof package ready for verification.",
+    summary: "Quest execution complete. Proof package ready for verification.",
     payload: state.proofRecord,
   };
 }

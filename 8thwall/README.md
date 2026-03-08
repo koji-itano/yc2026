@@ -1,4 +1,4 @@
-### Your Exported Project
+### Yaorozu God OS 8th Wall Export
 This zip contains your project source code, assets, image targets, and configuration needed to build and publish your 8th Wall project. It does not connect to any 8th Wall services, so will work even after the 8th Wall servers are shut down.
 
 ### Setup
@@ -28,10 +28,10 @@ Notes:
 - For the best `imagefound` result, keep the Ito En bottle upright, centered, evenly lit, and filling roughly 40-60% of the frame.
 - The scene camera is configured as `World` / `xrCameraType: world` so 8th Wall image-target tracking can use the AR camera feed on mobile.
 
-This export now includes a WIL-9 tabletop worker overlay in `src/app.js`.
+This export now includes a WIL-9 worker quest overlay in `src/app.js`.
 It adds:
 
-- a phone-first canister guidance HUD,
+- a phone-first quest execution HUD,
 - before / after evidence capture from the live 8th Wall canvas,
 - proof JSON generation plus server-backed dashboard handoff,
 - listeners for `reality.imagescanning`, `reality.imagefound`, `reality.imageupdated`,
@@ -76,7 +76,7 @@ The built-in dev server now exposes:
 - `GET /api/verification/latest`
 - `GET /api/verification/events`
 
-This lets the iPhone worker flow and the Mac dashboard share proof and verification state over the same HTTPS origin.
+This lets the iPhone worker flow and the Mac dashboard share quest proof and verification state over the same HTTPS origin.
 
 ### Mac desktop browser testing
 

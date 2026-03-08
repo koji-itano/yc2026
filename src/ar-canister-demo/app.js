@@ -57,7 +57,7 @@ const PROVIDERS = [
   },
   {
     id: "manual",
-    label: "Manual tabletop anchor",
+    label: "Manual quest anchor",
     isAvailable: () => true,
   },
 ];
@@ -70,12 +70,12 @@ const VERIFICATION_CHANNEL = "rpg-verification";
 const state = {
   sessionId: newSessionId(),
   taskId: "canister-cap-secure",
-  taskLabel: "Canister secure check",
+  taskLabel: "Quest execution check",
   instruction: "Turn clockwise to secure the cap.",
   workerId: "worker-demo-01",
   taskClass: "green task",
   attemptNumber: 0,
-  handoffMode: "local dashboard event",
+  handoffMode: "local dashboard event bus",
   proofEndpoint: null,
   provider: null,
   fallbackUsed: false,
@@ -130,7 +130,7 @@ function readConfigFromUrl() {
   state.workerId = params.get("workerId") || state.workerId;
   state.taskClass = params.get("taskClass") || state.taskClass;
   state.proofEndpoint = params.get("proofEndpoint") || null;
-  state.handoffMode = state.proofEndpoint ? "webhook-ready payload" : "local dashboard event";
+  state.handoffMode = state.proofEndpoint ? "webhook-ready payload" : "local dashboard event bus";
   state.demoProvider = params.get("demoProvider") || null;
   state.autoStart = params.get("autoStart") === "1";
   state.autoAnchor = params.get("autoAnchor") === "1";
