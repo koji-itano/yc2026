@@ -176,7 +176,7 @@ textarea {
 
 .adminTaskPanel {
   padding: 18px;
-  min-height: 100%;
+  align-self: start;
 }
 
 .adminPanelHeader {
