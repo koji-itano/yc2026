@@ -1213,7 +1213,8 @@ function renderWorker() {
   const cameraActive = isDesktopBrowser() ? state.desktopWebcamEnabled : true;
   const imageTargetActive = isImageTargetActive();
   const xrCameraReady = /^XR8 hasVideo/i.test(state.cameraStatus);
-  const showDetectionGuide = cameraActive && xrCameraReady && !state.targetLocked;
+  const guidanceActive = state.focusMode && imageTargetActive && xrCameraReady;
+  const showDetectionGuide = cameraActive && xrCameraReady && !state.targetLocked && state.focusMode;
 
   DOM.overlay.classList.toggle("rpg-focus-mode", state.focusMode);
   DOM.targetFoundChip.textContent = `Image target: ${imageTargetActive ? "found" : "waiting"}`;
@@ -1224,7 +1225,7 @@ function renderWorker() {
   DOM.detectionGuide.style.display = showDetectionGuide ? "flex" : "none";
   DOM.detectionTitle.textContent = getTargetProfiles()[state.activeTargetProfile].waitingTitle;
   DOM.detectionBody.textContent = getTargetProfiles()[state.activeTargetProfile].waitingBody;
-  DOM.guidance.style.display = imageTargetActive && xrCameraReady ? "flex" : "none";
+  DOM.guidance.style.display = guidanceActive ? "flex" : "none";
   DOM.guidanceLabel.textContent = `Target found: ${formatTargetName(state.targetName)}. Turn clockwise to secure the cap.`;
   applyGuidanceLayout();
   DOM.focusButton.style.display = cameraActive ? "inline-flex" : "none";
