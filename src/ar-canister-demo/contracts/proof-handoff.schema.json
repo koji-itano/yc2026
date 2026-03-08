@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rpg.local/schemas/proof-handoff.schema.json",
+  "title": "Real Physical Gigs Proof Handoff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["eventType", "issuedAt", "route", "summary", "payload"],
+  "properties": {
+    "eventType": {
+      "type": "string",
+      "const": "rpg:proof-ready"
+    },
+    "issuedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "route": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {
+      "$ref": "./canister-proof.schema.json"
+    }
+  }
+}

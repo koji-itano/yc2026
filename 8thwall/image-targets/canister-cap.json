@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/canister-cap_luminance.jpg",
+  "metadata": null,
+  "name": "canister-cap",
+  "type": "PLANAR",
+  "properties": {
+    "left": 0,
+    "top": 0,
+    "width": 1053,
+    "height": 1404,
+    "isRotated": false,
+    "originalWidth": 1053,
+    "originalHeight": 1404
+  },
+  "resources": {
+    "originalImage": "canister-cap_original.jpg",
+    "croppedImage": "canister-cap_cropped.jpg",
+    "thumbnailImage": "canister-cap_thumbnail.jpg",
+    "luminanceImage": "canister-cap_luminance.jpg"
+  },
+  "created": 1772948850829,
+  "updated": 1772948850829
+}

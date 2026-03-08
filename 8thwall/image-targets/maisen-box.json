@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/maisen-box_luminance.jpg",
+  "metadata": null,
+  "name": "maisen-box",
+  "type": "PLANAR",
+  "properties": {
+    "left": 0,
+    "top": 0,
+    "width": 3024,
+    "height": 4032,
+    "isRotated": true,
+    "originalWidth": 3024,
+    "originalHeight": 4032
+  },
+  "resources": {
+    "originalImage": "maisen-box_original.jpg",
+    "croppedImage": "maisen-box_cropped.jpg",
+    "thumbnailImage": "maisen-box_thumbnail.jpg",
+    "luminanceImage": "maisen-box_luminance.jpg"
+  },
+  "created": 1772953204825,
+  "updated": 1772953204825
+}

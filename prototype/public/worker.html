@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real Physical Gigs Worker Flow</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Real Physical Gigs / Worker</p>
+        <h1>Secure canister safety cap</h1>
+        <p>Accept the quest, capture before and after proof, then submit for verification.</p>
+        <div class="chips">
+          <span class="chip">Status: <strong id="statusValue">Loading</strong></span>
+          <span class="chip">Verification: <strong id="verificationValue">Loading</strong></span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <p class="eyebrow">Worker actions</p>
+        <div class="actions">
+          <button data-action="accept">Accept bounty</button>
+          <button data-action="start">Start task</button>
+          <label class="file">Choose before image<input id="beforeFile" type="file" accept="image/*" capture="environment" /></label>
+          <button data-action="before">Capture before</button>
+          <label class="file">Choose after image<input id="afterFile" type="file" accept="image/*" capture="environment" /></label>
+          <button data-action="after">Capture after</button>
+          <button data-action="submit">Submit proof</button>
+          <button class="secondary" data-action="sample">Use sample proof bundle</button>
+        </div>
+      </section>
+
+      <section class="evidenceGrid">
+        <article class="evidenceCard">
+          <p class="eyebrow">Before proof</p>
+          <img id="beforeImage" alt="Before proof" />
+        </article>
+        <article class="evidenceCard">
+          <p class="eyebrow">After proof</p>
+          <img id="afterImage" alt="After proof" />
+        </article>
+      </section>
+
+      <section class="panel">
+        <p class="eyebrow">Presenter cue</p>
+        <p id="presenterCue"></p>
+      </section>
+
+      <section class="panel">
+        <p class="eyebrow">Event timeline</p>
+        <pre id="eventLog"></pre>
+      </section>
+
+      <section class="panel">
+        <p class="eyebrow">Audit preview</p>
+        <pre id="auditOutput"></pre>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

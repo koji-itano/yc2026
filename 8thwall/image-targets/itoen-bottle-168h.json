@@ -1,0 +1,31 @@
+{
+  "imagePath": "image-targets/itoen-bottle-168h_luminance.jpg",
+  "metadata": null,
+  "name": "itoen-bottle-168h",
+  "type": "CYLINDER",
+  "properties": {
+    "left": 0,
+    "top": 721,
+    "width": 1082,
+    "height": 1443,
+    "isRotated": false,
+    "originalWidth": 1082,
+    "originalHeight": 2885,
+    "targetCircumferenceTop": 63,
+    "cylinderCircumferenceTop": 210,
+    "cylinderCircumferenceBottom": 210,
+    "cylinderSideLength": 167.98059149722735,
+    "arcAngle": 108,
+    "coniness": 0,
+    "inputMode": "ADVANCED",
+    "unit": "mm"
+  },
+  "resources": {
+    "originalImage": "itoen-bottle-168h_original.jpg",
+    "croppedImage": "itoen-bottle-168h_cropped.jpg",
+    "thumbnailImage": "itoen-bottle-168h_thumbnail.jpg",
+    "luminanceImage": "itoen-bottle-168h_luminance.jpg"
+  },
+  "created": 1772952702883,
+  "updated": 1772952702883
+}
