@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+
 import { useEffect, useRef, useState } from 'react';
 
 type Quest = {
@@ -29,6 +29,10 @@ function timeAgo(iso?: string): string {
   return `${Math.floor(secs / 3600)}h ago`;
 }
 
+function formatTime(date: Date): string {
+  return date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
 const STATUS_STYLE: Record<Quest['status'], { label: string; color: string; bg: string; border: string }> = {
   open:      { label: 'OPEN',     color: '#7a9aff', bg: 'rgba(78,140,255,0.1)',  border: 'rgba(78,140,255,0.3)'  },
   accepted:  { label: 'ACCEPTED', color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.3)' },
@@ -46,10 +50,19 @@ export default function CompanyPage() {
   const [totalPushed, setTotalPushed] = useState(0);
   const prevPushedRef = useRef(0);
 
+  // Live polling state
+  const [fetching, setFetching] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [countdown, setCountdown] = useState(POLL_MS / 1000);
+  const [newQuestFlash, setNewQuestFlash] = useState(false);
+  const lastFetchedAtRef = useRef<number>(Date.now());
+
   useEffect(() => {
     let cancelled = false;
 
     async function poll() {
+      if (cancelled) return;
+      setFetching(true);
       try {
         const res = await fetch('/api/quests', { cache: 'no-store' });
         if (!res.ok || cancelled) return;
@@ -60,6 +73,8 @@ export default function CompanyPage() {
         if (cancelled) return;
         setAllQuests(all);
         setAgentQuests(mine);
+        setLastUpdated(new Date());
+        lastFetchedAtRef.current = Date.now();
 
         // Track last time this agent pushed a quest
         if (mine.length > 0) {
@@ -71,10 +86,18 @@ export default function CompanyPage() {
 
         // Count total pushed by this agent (across all time)
         if (mine.length > prevPushedRef.current) {
+          const isFirst = prevPushedRef.current === 0;
           prevPushedRef.current = mine.length;
           setTotalPushed(mine.length);
+          if (!isFirst) {
+            setNewQuestFlash(true);
+            setTimeout(() => setNewQuestFlash(false), 1500);
+          }
         }
       } catch { /* ignore */ }
+      finally {
+        if (!cancelled) setFetching(false);
+      }
     }
 
     poll();
@@ -83,6 +106,16 @@ export default function CompanyPage() {
       cancelled = true;
       clearInterval(interval);
     };
+  }, []);
+
+  // Countdown timer
+  useEffect(() => {
+    const tick = setInterval(() => {
+      const elapsed = Date.now() - lastFetchedAtRef.current;
+      const remaining = Math.max(0, Math.ceil((POLL_MS - elapsed) / 1000));
+      setCountdown(remaining);
+    }, 500);
+    return () => clearInterval(tick);
   }, []);
 
   const open     = agentQuests.filter((q) => q.status === 'open').length;
@@ -101,7 +134,19 @@ export default function CompanyPage() {
             <p>Track your AI agent's activity and review all quests it has issued to the platform.</p>
           </div>
           <div className="companyHeaderActions">
-            <Link className="companyBackLink" href="/">← Back to map</Link>
+            {/* ── Live polling indicator ── */}
+            <div className="companyLiveBar">
+              <span className={`companyLiveDot${fetching ? ' companyLiveFetching' : ''}`} />
+              <span className="companyLiveLabel">LIVE</span>
+              <span className="companyLiveDetail">
+                {fetching
+                  ? 'Syncing…'
+                  : lastUpdated
+                    ? `Updated ${formatTime(lastUpdated)} · next in ${countdown}s`
+                    : 'Connecting…'}
+              </span>
+            </div>
+
           </div>
         </header>
 
@@ -138,7 +183,7 @@ export default function CompanyPage() {
 
         {/* ── Quest Table ───────────────────────────────────────── */}
         <div className="companySection">
-          <div className="companySectionHeader">
+          <div className={`companySectionHeader${newQuestFlash ? ' companyQuestFlash' : ''}`}>
             <h2>Quests from this agent</h2>
             <span>{agentQuests.length} total</span>
           </div>

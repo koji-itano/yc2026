@@ -1,76 +1,58 @@
-# Guidance OS — ハッカソンリポジトリ / Hackathon Repository
+# Yaorozu God OS
 
-**c0mpiled-7/sanfransokyo ハッカソン | 2026年3月8日**
-虎ノ門ヒルズ森タワー、東京
+![Next.js](https://img.shields.io/badge/Next.js-App-black?logo=next.js)
+![React](https://img.shields.io/badge/React-Latest-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?logo=typescript&logoColor=white)
+![Leaflet](https://img.shields.io/badge/Leaflet-Map_UI-199900?logo=leaflet&logoColor=white)
+![Shisa.ai](https://img.shields.io/badge/Shisa.ai-LLM_Voice_Flow-ff6b35)
+![CrustData](https://img.shields.io/badge/CrustData-B2B_Data_Matching-0f766e)
+![Hackathon](https://img.shields.io/badge/Hackathon-YC_RFS_2026-f97316)
 
-> "We're building the execution layer for AI-managed physical work."
->
-> AI管理型フィジカルワークの実行レイヤーを構築する。
+AI dispatch for physical work: map live tasks, guide workers by voice, rank operators, and keep an auditable quest feed for agent-issued jobs.
 
-**チーム / Team:** 5 members
-**テーマ / Theme:** #7 — AI Guidance for Physical Work (YC RFS Spring 2026)
+This repository was developed during a hackathon around YC's "AI Guidance for Physical Work" theme. In some strategy documents, the concept also appears as `Guidance OS`, which is the internal working name for the same idea.
 
----
+## What is Yaorozu God OS?
 
-## ディレクトリ構成 / Directory Structure
+Yaorozu God OS is a demo platform for AI-managed physical work. It shows how an AI system can issue real-world tasks, guide a human operator through acceptance, help dispatch teams assign the right person, and maintain a structured operational log of what was pushed into the system.
 
-```
-yc2026/
-├── README.md
-│
-├── event/                                 # 主催者からの情報 / Organizer-provided info
-│   ├── c0mpiled_hackathon_emails.md       #   全15メール + 全リンク / All emails + links
-│   ├── YC_RFS_Spring2026.md               #   YC RFS 10テーマ全文 / Full text
-│   ├── 20260308_team_building_slides.md   #   チームビルディング資料 / Session slides
-│   ├── (removed)                          #   参加者フォーム — 個人情報のため削除
-│   ├── (removed)                          #   参加者分析 — 個人情報のため削除
-│   ├── tools_blaxel.md                    #   Blaxel — 永続サンドボックス
-│   ├── tools_superset.md                  #   Superset — 並列AIエージェント
-│   ├── tools_crustdata.md                 #   CrustData — B2B企業データAPI
-│   ├── tools_cactus.md                    #   Cactus Compute — オンデバイスAI SDK
-│   └── tools_others.md                    #   Unbound, VoiceOS, Shisa AI
-│
-├── strategy/                              # 戦略・企画 / Our planning docs
-│   ├── PRD_v1.0_GuidanceOS.md             #   PRD たたき台 / Draft PRD
-│   ├── PRD_v1.3_GovDispatch_AR.md         #   Gov / civic task wedge
-│   ├── tabletop_canister_demo_runbook_v1.0.md
-│   └── AR_Guidance_v1.1_Canister.md
-│
-├── frontend/                              # 実行可能な Next.js フロントエンド / Runnable Next.js app
-│   ├── app/                               #   App Router のエントリ / App Router entrypoint
-│   ├── package.json                       #   依存関係と scripts / Dependencies and scripts
-│   └── README.md                          #   セットアップ手順 / Setup instructions
-│
-├── prototype/                             # WIL-8 再生成プロトタイプ / Reconstructed WIL-8 prototype
-│   ├── public/                            #   Dashboard / worker static UI
-│   ├── server.js                          #   Local Node server
-│   └── validate*.js                       #   Validation scripts
-│
-├── 8thwall/                               # 8th Wall 実機デモ / 8th Wall iPhone demo
-│   ├── src/                               #   World-camera AR flow
-│   ├── image-targets/                     #   Generated target payloads
-│   └── README.md                          #   iPhone/HTTPS launch notes
-│
-└── src/                                   # ソースコード / Application source code
-    └── ar-canister-demo/                  #   AR worker + dashboard demo
+Instead of focusing on autonomous robots, the product focuses on the execution layer around human workers: task routing, voice-based acceptance, operator matching, and quest visibility for companies running agent-driven operations.
+
+## How It Works
+
+1. A worker opens the map experience and sees active quests placed on a Tokyo city map.
+2. The worker can start a voice-based acceptance flow that briefs the task and confirms availability, ETA, and safety checks.
+3. An admin operator reviews open tasks in a dispatch console and assigns the best available human using skill and distance ranking.
+4. A company-side dashboard monitors quests pushed by an agent and tracks platform-level quest activity.
+
+## Demo Surfaces
+
+| Route         | Purpose                                                                    |
+| ------------- | -------------------------------------------------------------------------- |
+| `/`           | Worker-facing demo with map UI, quest discovery, and voice acceptance flow |
+| `/admin`      | Dispatch console for ranking and assigning human operators                 |
+| `/company`    | Company dashboard for agent activity and quest monitoring                  |
+| `/api/quests` | API endpoint for listing quests and ingesting agent-issued quests          |
+
+## Setup
+
+### Run locally
+
+Run following under frontend directory. Create `frontend/.env` from `frontend/.env.example` and set the values needed for the integrations you want to use. Open `http://localhost:3000` after the dev server starts.
+
+```bash
+# Install node packages
+pnpm install
+# Running frontend server
+pnpm dev
 ```
 
----
+## API
 
-## クイックリンク / Quick Links
+### `GET /api/quests`
 
-| リンク | URL |
-|--------|-----|
-| イベントページ | https://luma.com/rhi9rha9?pk=g-zgxvN6uXrmCjOO5 |
-| YC RFS | https://www.ycombinator.com/rfs |
-| Blaxel ドキュメント | https://docs.blaxel.ai/Overview |
-| Cactus ドキュメント | https://cactuscompute.com/docs/v1.7 |
-| Superset ドキュメント | https://docs.superset.sh/installation |
+Returns the current quest list ordered from newest to oldest.
 
-## スポンサークレジット / Sponsor Credits
+### `POST /api/quests`
 
-| スポンサー | クレジット |
-|-----------|-----------|
-| CrustData | $2,000 |
-| Blaxel | $500 |
-| Morph | $50 |
+Pushes a new quest into the in-memory quest store.

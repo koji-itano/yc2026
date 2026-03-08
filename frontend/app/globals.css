@@ -2352,3 +2352,75 @@ textarea {
   .companyHeader, .companyAgentCard { flex-direction: column; align-items: flex-start; }
   .companyAgentStats { width: 100%; justify-content: space-between; }
 }
+
+/* ── Live polling indicator ──────────────────────────────── */
+
+.companyHeaderActions {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.companyLiveBar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid rgba(52, 211, 153, 0.22);
+  border-radius: 999px;
+  background: rgba(52, 211, 153, 0.06);
+}
+
+.companyLiveDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 7px rgba(52, 211, 153, 0.8);
+  flex: none;
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+.companyLiveFetching {
+  background: #fbbf24;
+  box-shadow: 0 0 7px rgba(251, 191, 36, 0.8);
+  animation: liveSpin 0.6s linear infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.85); }
+  50%       { opacity: 1;   transform: scale(1.15); }
+}
+
+@keyframes liveSpin {
+  0%   { opacity: 0.6; transform: scale(0.9); }
+  50%  { opacity: 1;   transform: scale(1.1); }
+  100% { opacity: 0.6; transform: scale(0.9); }
+}
+
+.companyLiveLabel {
+  color: #34d399;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.companyLiveDetail {
+  color: rgba(180, 195, 240, 0.5);
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* New quest flash on the section header */
+@keyframes sectionFlash {
+  0%   { background: rgba(52, 211, 153, 0.12); }
+  100% { background: transparent; }
+}
+
+.companyQuestFlash {
+  animation: sectionFlash 1.5s ease-out 1;
+}

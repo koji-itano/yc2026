@@ -15,7 +15,9 @@
     },
     "summary": "Suspicious shadow detected on the main hall camera feed. Please inspect the site and file a visual report.",
     "title": "Main Hall Camera Inspection",
-    "type": "Monitoring"
+    "type": "Monitoring",
+    "agentId": "yaoyorozu-shrine-agent-v1",
+    "createdAt": "2026-03-08T07:00:00.000Z"
   },
   {
     "eta": "ETA 01:00",
@@ -33,7 +35,9 @@
     },
     "summary": "Suspicious individual reported near the approach gate. Patrol the area and assess the situation.",
     "title": "Approach Gate Suspicious Person",
-    "type": "Alert"
+    "type": "Alert",
+    "agentId": "yaoyorozu-shrine-agent-v1",
+    "createdAt": "2026-03-08T07:05:00.000Z"
   },
   {
     "eta": "ETA 02:15",
@@ -51,7 +55,9 @@
     },
     "summary": "Camera unit #3 at the shrine office is unresponsive. Check hardware status and attempt a reboot.",
     "title": "Camera #3 Fault Response",
-    "type": "Inspection"
+    "type": "Inspection",
+    "agentId": "yaoyorozu-shrine-agent-v1",
+    "createdAt": "2026-03-08T07:10:00.000Z"
   },
   {
     "eta": "ETA 03:00",
@@ -69,7 +75,9 @@
     },
     "summary": "Night access to the inner sanctuary is blocked. Verify the alternate route and assist with signage placement.",
     "title": "Inner Sanctuary Night Route Setup",
-    "type": "Navigation"
+    "type": "Navigation",
+    "agentId": "yaoyorozu-shrine-agent-v1",
+    "createdAt": "2026-03-08T07:15:00.000Z"
   },
   {
     "eta": "ETA 04:30",
@@ -87,6 +95,8 @@
     },
     "summary": "Collect late-night visitor flow data across the grounds. Log congestion points to improve AI routing models.",
     "title": "Late-Night Visitor Flow Survey",
-    "type": "Learning"
+    "type": "Learning",
+    "agentId": "yaoyorozu-shrine-agent-v1",
+    "createdAt": "2026-03-08T07:20:00.000Z"
   }
 ]
