@@ -28,6 +28,8 @@
           <div class="status-row">
             <span class="chip">Worker: phone</span>
             <span class="chip">Dashboard: laptop</span>
+            <span class="chip" id="originChip">Origin: detecting</span>
+            <span class="chip" id="secureContextChip">Secure context: checking</span>
           </div>
         </div>
       </section>
@@ -130,6 +132,10 @@
         </div>
         <pre id="workerUrlOutput">Worker URL will appear here.</pre>
         <pre id="dashboardUrlOutput">Dashboard URL will appear here.</pre>
+        <p class="dashboard-note" id="launchHint">
+          Open this control page over your laptop's Wi-Fi IP if you want the copied worker link to
+          point at the same local server for the phone.
+        </p>
       </section>
 
       <section class="dashboard-card">

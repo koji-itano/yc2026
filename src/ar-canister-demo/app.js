@@ -141,6 +141,11 @@ function detectProvider() {
   return PROVIDERS.find((provider) => provider.isAvailable()) || PROVIDERS[2];
 }
 
+function isLocalhostOrigin() {
+  const hostname = window.location && window.location.hostname;
+  return hostname === "localhost" || hostname === "127.0.0.1";
+}
+
 function getProofChannel() {
   if (proofChannel || typeof BroadcastChannel !== "function") {
     return proofChannel;
@@ -173,6 +178,14 @@ async function startSession() {
   render();
 
   try {
+    if (!window.isSecureContext && !isLocalhostOrigin()) {
+      throw new Error("Camera access requires HTTPS on non-localhost origins.");
+    }
+
+    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
+      throw new Error("Browser camera APIs are unavailable in this context.");
+    }
+
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: { ideal: "environment" },
@@ -185,7 +198,7 @@ async function startSession() {
     DOM.cameraFallback.classList.add("hidden");
     DOM.statusChip.textContent = "Camera live";
   } catch (error) {
-    state.status = "Camera unavailable. Continue with fallback anchor.";
+    state.status = `${error.message} Continue with fallback anchor.`;
     DOM.statusChip.textContent = "Camera unavailable";
     DOM.cameraFallback.classList.remove("hidden");
   }

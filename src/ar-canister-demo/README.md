@@ -21,26 +21,54 @@ For the real 8th Wall completion checklist, see:
 
 ## Run
 
-Serve this folder over a local web server from the repository root:
+Start the AR demo server from the repository root:
 
 ```bash
-cd /Users/wildman/code/yc2026-symphony-workspaces/WIL-9
-python3 -m http.server 4173
+npm run ar:serve
 ```
 
 Then open:
 
-`http://localhost:4173/src/ar-canister-demo/`
+`http://localhost:4173/index.html`
 
 For the dashboard receiver view, open:
 
-`http://localhost:4173/src/ar-canister-demo/dashboard.html`
+`http://localhost:4173/dashboard.html`
 
 For the operator launch console, open:
 
-`http://localhost:4173/src/ar-canister-demo/control.html`
+`http://localhost:4173/control.html`
 
 Use a phone browser for camera access.
+
+## Same Wi-Fi phone access
+
+The local server binds to `0.0.0.0` and prints laptop-local plus Wi-Fi URLs for:
+
+- `control.html`
+- `index.html`
+- `dashboard.html`
+
+Typical flow:
+
+1. Run `npm run ar:serve` on the laptop.
+2. Copy the printed `http://<your-laptop-ip>:4173/control.html` URL into the phone browser.
+3. Use the control page to generate the worker link for the same origin.
+
+Important camera note:
+
+- The phone can open an HTTP LAN URL, but browser camera APIs usually require a secure context on
+  non-`localhost` origins.
+- For live camera-based AR on the phone, start the same server with HTTPS:
+
+```bash
+SSL_CERT_FILE=/absolute/path/dev-cert.pem \
+SSL_KEY_FILE=/absolute/path/dev-key.pem \
+npm run ar:serve
+```
+
+- If you only need operator flow, proof flow, and manual fallback guidance, plain HTTP on the LAN
+  is still enough.
 
 For a repo-local smoke check without a live browser session, run:
 
@@ -153,5 +181,5 @@ These query params let a dashboard deep-link into the worker flow:
 Example:
 
 ```text
-http://localhost:4173/src/ar-canister-demo/?taskId=WIL-9-canister&workerId=worker-07&taskClass=green%20task&instruction=Turn%20clockwise%20to%20secure%20the%20cap.&demoScript=autoplay
+http://localhost:4173/index.html?taskId=WIL-9-canister&workerId=worker-07&taskClass=green%20task&instruction=Turn%20clockwise%20to%20secure%20the%20cap.&demoScript=autoplay
 ```

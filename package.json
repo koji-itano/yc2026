@@ -2,6 +2,7 @@
   "name": "real-physical-gigs-prototype",
   "private": true,
   "scripts": {
+    "ar:serve": "node src/ar-canister-demo/server.js",
     "start": "node prototype/server.js",
     "validate": "node prototype/validate.js",
     "validate:server": "node prototype/validate-server.js"

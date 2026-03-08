@@ -1,4 +1,6 @@
 const DOM = {
+  originChip: document.getElementById("originChip"),
+  secureContextChip: document.getElementById("secureContextChip"),
   taskIdInput: document.getElementById("taskIdInput"),
   taskLabelInput: document.getElementById("taskLabelInput"),
   workerIdInput: document.getElementById("workerIdInput"),
@@ -18,6 +20,7 @@ const DOM = {
   copyDashboardButton: document.getElementById("copyDashboardButton"),
   workerUrlOutput: document.getElementById("workerUrlOutput"),
   dashboardUrlOutput: document.getElementById("dashboardUrlOutput"),
+  launchHint: document.getElementById("launchHint"),
 };
 
 function baseUrl(pathname) {
@@ -84,6 +87,30 @@ function refreshOutputs() {
   DOM.dashboardUrlOutput.textContent = buildDashboardUrl();
 }
 
+function refreshOriginStatus() {
+  const { hostname, origin, protocol } = window.location;
+  const isLanOrigin = hostname !== "localhost" && hostname !== "127.0.0.1";
+  const secure = window.isSecureContext;
+
+  DOM.originChip.textContent = `Origin: ${origin}`;
+  DOM.secureContextChip.textContent = secure ? "Secure context: yes" : "Secure context: no";
+
+  if (secure) {
+    DOM.launchHint.textContent =
+      "This page is in a secure context. The copied worker link can request the phone camera if the browser allows it.";
+    return;
+  }
+
+  if (protocol === "http:" && isLanOrigin) {
+    DOM.launchHint.textContent =
+      "This is an HTTP LAN URL. The phone can open the page, but camera-based AR may be blocked until you serve it over HTTPS or 8th Wall.";
+    return;
+  }
+
+  DOM.launchHint.textContent =
+    "Open this control page over your laptop's Wi-Fi IP if you want the copied worker link to point at the same local server for the phone.";
+}
+
 DOM.refreshLinksButton.addEventListener("click", refreshOutputs);
 DOM.openWorkerButton.addEventListener("click", () => {
   window.open(buildWorkerUrl(), "_blank", "noopener,noreferrer");
@@ -117,3 +144,4 @@ DOM.copyDashboardButton.addEventListener("click", () =>
 });
 
 refreshOutputs();
+refreshOriginStatus();
