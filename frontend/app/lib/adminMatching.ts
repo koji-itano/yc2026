@@ -1,10 +1,5 @@
 export type TaskPriority = "high" | "medium" | "low";
 
-export type TaskSearchProfile = {
-  functions: string[];
-  titleKeywords: string[];
-};
-
 export type AdminTask = {
   eta: string;
   id: string;
@@ -15,57 +10,29 @@ export type AdminTask = {
   priority: TaskPriority;
   requiredSkill: string;
   reward: string;
-  searchProfile: TaskSearchProfile;
   summary: string;
   title: string;
   type: string;
 };
 
-export type CrustdataFilter = {
-  filter_type: string;
-  type: string;
-  value: string[];
-};
+export type WorkerAvailability = "available" | "busy" | "offline";
 
-export type CrustdataRequestPayload = {
-  filters: CrustdataFilter[];
-  page: number;
-};
-
-export type CrustdataEmployer = {
-  company_name?: string | null;
-  is_default?: boolean | null;
-  location?: string | null;
-  title?: string | null;
-};
-
-export type CrustdataPerson = {
-  current_title?: string | null;
-  default_position_title?: string | null;
-  employer?: CrustdataEmployer[] | null;
-  headline?: string | null;
-  linkedin_profile_url?: string | null;
-  linkedin_profile_urn?: string | null;
-  location?: string | null;
-  name?: string | null;
-  query_person_linkedin_urn?: string | null;
-};
-
-export type ProfileConfidence = "high" | "medium" | "low";
-
-export type AdminCandidate = {
-  company: string;
-  distanceLabel: string;
-  headline: string;
+export type Worker = {
+  availability: WorkerAvailability;
+  currentLoad: number;
+  homeArea: string;
   id: string;
-  linkedinUrl?: string;
-  location: string;
+  languages: string[];
   name: string;
-  profileConfidence: ProfileConfidence;
+  rating: number;
+  skills: string[];
+};
+
+export type RankedCandidate = {
+  distanceLabel: string;
   reasons: string[];
-  roleFitLabel: string;
   score: number;
-  title: string;
+  worker: Worker;
 };
 
 const areaProximity: Record<string, Record<string, number>> = {
@@ -119,192 +86,68 @@ const areaProximity: Record<string, Record<string, number>> = {
   },
 };
 
-const areaAliases: Record<string, string[]> = {
-  Ginza: ["ginza", "chuo"],
-  Marunouchi: ["marunouchi", "tokyo station", "chiyoda"],
-  Minato: ["minato", "roppongi", "toranomon", "azabu"],
-  Shibuya: ["shibuya"],
-  Shinjuku: ["shinjuku"],
-  Ueno: ["ueno", "taito"],
-};
+function getDistanceScore(task: AdminTask, worker: Worker) {
+  const rawDistance = areaProximity[task.locationArea]?.[worker.homeArea] ?? 9;
 
-function normalizeText(value: string | null | undefined) {
-  return (value ?? "").toLowerCase();
-}
-
-function includesOneOf(value: string, patterns: string[]) {
-  return patterns.some((pattern) => value.includes(pattern.toLowerCase()));
-}
-
-function getDistanceScore(task: AdminTask, candidate: AdminCandidate) {
-  const location = normalizeText(candidate.location);
-  const aliases = areaAliases[task.locationArea] ?? [];
-
-  if (includesOneOf(location, aliases)) {
+  if (rawDistance <= 1) {
     return { distanceLabel: "same zone", points: 24 };
   }
 
-  if (location.includes("tokyo")) {
-    return { distanceLabel: "tokyo-wide", points: 14 };
+  if (rawDistance <= 3) {
+    return { distanceLabel: "nearby", points: 16 };
   }
 
-  if (location.includes("japan")) {
-    return { distanceLabel: "regional transfer", points: 8 };
+  if (rawDistance <= 5) {
+    return { distanceLabel: "cross-district", points: 8 };
   }
 
-  return { distanceLabel: "remote profile", points: 2 };
+  return { distanceLabel: "far transfer", points: 2 };
 }
 
-function getProfileConfidence(candidate: AdminCandidate) {
-  const hasLinkedin = Boolean(candidate.linkedinUrl);
-  const hasHeadline = Boolean(candidate.headline);
-  const hasCompany = candidate.company !== "Independent";
-
-  if (hasLinkedin && hasHeadline && hasCompany) {
-    return { label: "profile confidence: high", level: "high" as const, points: 14 };
+function getAvailabilityScore(worker: Worker) {
+  if (worker.availability === "available") {
+    return { label: "available now", points: 14 };
   }
 
-  if ((hasLinkedin && hasHeadline) || (hasHeadline && hasCompany)) {
-    return { label: "profile confidence: medium", level: "medium" as const, points: 9 };
+  if (worker.availability === "busy") {
+    return { label: "busy, can re-route", points: 5 };
   }
 
-  return { label: "profile confidence: low", level: "low" as const, points: 4 };
+  return { label: "offline fallback", points: -4 };
 }
 
-function getRoleFit(task: AdminTask, candidate: AdminCandidate) {
-  const title = normalizeText(candidate.title);
-  const headline = normalizeText(candidate.headline);
-  const company = normalizeText(candidate.company);
-  const combined = `${title} ${headline} ${company}`;
-  const requiredSkill = normalizeText(task.requiredSkill);
-  const type = normalizeText(task.type);
-  const titleKeywords = task.searchProfile.titleKeywords.map((keyword) => keyword.toLowerCase());
+function getSkillScore(task: AdminTask, worker: Worker) {
+  const normalizedRequiredSkill = task.requiredSkill.toLowerCase();
+  const normalizedType = task.type.toLowerCase();
+  const normalizedSkills = worker.skills.map((skill) => skill.toLowerCase());
 
-  if (combined.includes(requiredSkill) || includesOneOf(combined, titleKeywords)) {
-    return { label: `role fit: strong ${task.requiredSkill.toLowerCase()} match`, points: 42 };
+  if (normalizedSkills.includes(normalizedRequiredSkill)) {
+    return { label: `strong ${task.requiredSkill} fit`, points: 42 };
   }
 
-  if (combined.includes(type)) {
-    return { label: `role fit: good ${task.type.toLowerCase()} alignment`, points: 28 };
+  if (normalizedSkills.includes(normalizedType)) {
+    return { label: `good ${task.type} coverage`, points: 28 };
   }
 
-  return { label: "role fit: adjacent ops profile", points: 11 };
+  return { label: "adjacent field experience", points: 10 };
 }
 
-function getCompanyFit(task: AdminTask, candidate: AdminCandidate) {
-  const company = normalizeText(candidate.company);
-
-  if (company.includes("rail") || company.includes("mobility") || company.includes("logistics")) {
-    return { label: "company context: field operations adjacent", points: 10 };
-  }
-
-  if (company.includes("travel") || company.includes("hotel") || company.includes("retail")) {
-    return { label: "company context: service environment relevant", points: 8 };
-  }
-
-  return { label: "company context: generalist background", points: 4 };
-}
-
-function mapCrustdataPerson(person: CrustdataPerson): AdminCandidate {
-  const defaultEmployer =
-    person.employer?.find((employer) => employer.is_default) ?? person.employer?.[0] ?? undefined;
-  const title = person.current_title ?? defaultEmployer?.title ?? person.default_position_title ?? "Unknown title";
-  const company = defaultEmployer?.company_name ?? "Independent";
-  const location = person.location ?? defaultEmployer?.location ?? "Tokyo, Japan";
-  const name = person.name ?? "Unnamed profile";
-  const headline = person.headline ?? title;
-  const id =
-    person.linkedin_profile_urn ??
-    person.query_person_linkedin_urn ??
-    person.linkedin_profile_url ??
-    `${name}:${title}:${company}`;
-
-  return {
-    company,
-    distanceLabel: "regional transfer",
-    headline,
-    id,
-    linkedinUrl: person.linkedin_profile_url ?? undefined,
-    location,
-    name,
-    profileConfidence: "medium",
-    reasons: [],
-    roleFitLabel: "",
-    score: 0,
-    title,
-  };
-}
-
-export type TaskRecommendation = {
-  reason: string;
-  score: number;
-  task: AdminTask;
-};
-
-/**
- * Given a ranked candidate (returned from Crustdata), score every task in the
- * task list and return the top matches — i.e. the "recommended tasks for this
- * human operator" based on their profile.
- */
-export function recommendTasksForCandidate(
-  candidate: AdminCandidate,
-  tasks: AdminTask[],
-  limit = 3,
-): TaskRecommendation[] {
-  return tasks
-    .map((task) => {
-      const roleFit = getRoleFit(task, candidate);
-      const distance = getDistanceScore(task, candidate);
-      const score = roleFit.points + distance.points;
-
-      const reasons: string[] = [];
-      if (roleFit.points >= 42) {
-        reasons.push(`Strong skill match — ${task.requiredSkill}`);
-      } else if (roleFit.points >= 28) {
-        reasons.push(`Good ${task.type} alignment`);
-      } else {
-        reasons.push("Adjacent ops profile");
-      }
-      if (distance.points >= 24) {
-        reasons.push("In the same zone");
-      } else if (distance.points >= 14) {
-        reasons.push("Tokyo-wide reach");
-      }
-
-      return {
-        reason: reasons.join(" · "),
-        score,
-        task,
-      };
-    })
-    .sort((a, b) => b.score - a.score || a.task.title.localeCompare(b.task.title))
-    .slice(0, limit);
-}
-
-export function rerankCandidates(task: AdminTask, profiles: CrustdataPerson[]): AdminCandidate[] {
-  return profiles
-    .map((profile) => {
-      const candidate = mapCrustdataPerson(profile);
-      const roleFit = getRoleFit(task, candidate);
-      const distance = getDistanceScore(task, candidate);
-      const companyFit = getCompanyFit(task, candidate);
-      const confidence = getProfileConfidence(candidate);
-      const score = roleFit.points + distance.points + companyFit.points + confidence.points;
+export function rankCandidates(task: AdminTask, workers: Worker[]): RankedCandidate[] {
+  return workers
+    .map((worker) => {
+      const skill = getSkillScore(task, worker);
+      const distance = getDistanceScore(task, worker);
+      const availability = getAvailabilityScore(worker);
+      const ratingPoints = Math.round(worker.rating * 4);
+      const loadPoints = Math.max(0, 10 - worker.currentLoad * 2);
+      const score = skill.points + distance.points + availability.points + ratingPoints + loadPoints;
 
       return {
         distanceLabel: distance.distanceLabel,
-        headline: candidate.headline,
-        id: candidate.id,
-        linkedinUrl: candidate.linkedinUrl,
-        location: candidate.location,
-        name: candidate.name,
-        profileConfidence: confidence.level,
-        reasons: [roleFit.label, `location fit: ${distance.distanceLabel}`, confidence.label],
-        roleFitLabel: roleFit.label,
+        reasons: [skill.label, distance.distanceLabel, availability.label],
         score,
-        title: candidate.title,
-        company: candidate.company,
+        worker,
       };
     })
-    .sort((left, right) => right.score - left.score || left.name.localeCompare(right.name));
+    .sort((left, right) => right.score - left.score || right.worker.rating - left.worker.rating);
 }
