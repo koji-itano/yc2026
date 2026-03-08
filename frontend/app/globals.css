@@ -2015,3 +2015,171 @@ textarea {
   box-shadow: 0 0 16px rgba(52, 211, 153, 0.22);
 }
 
+/* =========================================================
+   QUEST PANEL — AI RECOMMENDATION BLOCK
+   ========================================================= */
+
+.questRecommendBlock {
+  padding: 14px;
+  border: 1px solid rgba(65, 228, 255, 0.18);
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at top left, rgba(65, 228, 255, 0.06), transparent 50%),
+    rgba(8, 12, 28, 0.72);
+  backdrop-filter: blur(10px);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.questRecommendHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.questRecommendEyebrow {
+  color: #41e4ff;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.questRecommendSource {
+  color: #5d78a8;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.questRecommendLoading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #7a9aff;
+  font-size: 0.82rem;
+  padding: 8px 0;
+}
+
+.questRecommendSpinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(65, 228, 255, 0.3);
+  border-top-color: #41e4ff;
+  border-radius: 50%;
+  animation: spinnerRotate 0.8s linear infinite;
+}
+
+@keyframes spinnerRotate {
+  to { transform: rotate(360deg); }
+}
+
+.questRecommendError {
+  color: #7a8fb0;
+  font-size: 0.8rem;
+  padding: 6px 0;
+}
+
+.questRecommendList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.questRecommendCard {
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 3px solid var(--q-color);
+  border-radius: 14px;
+  background: rgba(14, 18, 38, 0.6);
+  transition: border-color 250ms ease, box-shadow 250ms ease;
+}
+
+.questRecommendCardAccepted {
+  border-color: var(--q-color);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--q-color) 22%, transparent);
+}
+
+.questRecommendCardTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.questRecommendCardMeta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.questRecommendCardType {
+  color: var(--q-accent);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.questRecommendCardTitle {
+  display: block;
+  color: #eef2ff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.questRecommendCardReason {
+  display: block;
+  color: #5d78a8;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  margin-top: 3px;
+}
+
+.questRecommendScore {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  border: 1px solid color-mix(in srgb, var(--q-color) 40%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--q-color) 12%, transparent);
+  color: var(--q-accent);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.questRecommendCardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.questAllHeader {
+  margin-bottom: 10px;
+}
+
+.questAllEyebrow {
+  color: #4e8cff;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+
