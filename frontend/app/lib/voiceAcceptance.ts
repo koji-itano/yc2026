@@ -47,15 +47,21 @@ function buildSystemPrompt(language: AcceptanceLanguage) {
   return `
 You are a hands-free job acceptance assistant for field work tasks.
 ${languageInstruction}
-Ask one thing at a time.
-Keep replies concise, operational, and calm.
+Keep the conversation natural, polite, and easy to say out loud.
+Ask only one thing at a time and keep each reply to one short spoken turn.
+Sound like a calm human coordinator, not a script or a manual.
 Only use facts that are included in the task context and conversation.
-Your job is to guide the user through this exact sequence:
+Guide the user through this exact sequence:
 1. Brief the task.
 2. Confirm availability.
 3. Confirm ETA.
 4. Confirm safety/prerequisites.
 5. Confirm accept or decline.
+For Japanese replies, use polite and natural spoken Japanese.
+Do not sound robotic, overly formal, repetitive, or overly stiff.
+Avoid bullet-point phrasing, checklist phrasing, or repeating the same stock opener every turn.
+It is fine to use a short bridge such as "お願いします", "では", or "念のため" when it sounds natural.
+The assistantText value must contain only the spoken reply that the worker should hear.
 If the user is uncertain, offer a short clarification or escalation to human support.
 If the user declines, mark the status as declined.
 If the user says they need help, cannot understand, or cannot safely proceed, mark the status as needs_help.
@@ -78,12 +84,45 @@ function buildTaskContext(task: AdminTask) {
   ].join("\n");
 }
 
-function parseAssistantPayload(content: string | undefined): AcceptanceReply {
-  const fallback: AcceptanceReply = {
-    assistantText: "I can help you confirm this task. Can you take it and head over safely?",
-    nextStep: "availability",
-    statusHint: "continue",
-  };
+function getFallbackReply(language: AcceptanceLanguage): AcceptanceReply {
+  return language === "ja"
+    ? {
+        assistantText: "この案件を確認します。今から対応できそうか、まず教えてください。",
+        nextStep: "availability",
+        statusHint: "continue",
+      }
+    : {
+        assistantText: "I can help confirm this task. Are you available to take it and head over safely?",
+        nextStep: "availability",
+        statusHint: "continue",
+      };
+}
+
+function normalizeAssistantText(text: string, language: AcceptanceLanguage) {
+  const normalized = text.replace(/\s+/g, " ").trim();
+
+  if (!normalized) {
+    return getFallbackReply(language).assistantText;
+  }
+
+  if (language === "ja") {
+    return normalized
+      .replace(/^会話を開始してください。?/u, "")
+      .replace(/^タスク概要を短く伝えて、?/u, "")
+      .replace(/^その後で/u, "")
+      .replace(/^確認してください。?/u, "")
+      .trim();
+  }
+
+  return normalized
+    .replace(/^Start the conversation\.?\s*/i, "")
+    .replace(/^Brief the task in one short message,?\s*/i, "")
+    .replace(/^then ask if the user is available now\.?\s*/i, "")
+    .trim();
+}
+
+function parseAssistantPayload(content: string | undefined, language: AcceptanceLanguage): AcceptanceReply {
+  const fallback = getFallbackReply(language);
 
   if (!content) {
     return fallback;
@@ -100,14 +139,14 @@ function parseAssistantPayload(content: string | undefined): AcceptanceReply {
       typeof parsed.statusHint === "string"
     ) {
       return {
-        assistantText: parsed.assistantText,
+        assistantText: normalizeAssistantText(parsed.assistantText, language),
         nextStep: parsed.nextStep as AcceptanceStep,
         statusHint: parsed.statusHint as AcceptanceStatusHint,
       };
     }
   } catch {
     return {
-      assistantText: trimmed,
+      assistantText: normalizeAssistantText(trimmed, language),
       nextStep: "availability",
       statusHint: "continue",
     };
@@ -142,8 +181,8 @@ export async function generateAcceptanceReply(input: {
         userTranscript.trim().length > 0
           ? userTranscript
           : language === "ja"
-            ? "会話を開始してください。最初にタスク概要を短く伝えて、その後で今すぐ対応できるかを確認してください。"
-            : "Start the conversation. Brief the task in one short message, then ask if the user is available now.",
+            ? "会話を始めてください。案件の要点をひとこと自然に伝えたうえで、今から動けそうかを丁寧に確認してください。"
+            : "Start the conversation with one natural spoken reply: briefly explain the task, then politely ask if the user is available now.",
       role: "user" as const,
     },
   ];
@@ -170,5 +209,5 @@ export async function generateAcceptanceReply(input: {
   const data = (await response.json()) as ShisaChatResponse;
   const content = data.choices?.[0]?.message?.content;
 
-  return parseAssistantPayload(content);
+  return parseAssistantPayload(content, language);
 }

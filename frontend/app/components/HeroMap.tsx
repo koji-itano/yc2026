@@ -162,6 +162,8 @@ export function HeroMap() {
   const leafletRef = useRef<typeof import("leaflet") | null>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
   const markersRef = useRef<Array<{ label: string; marker: import("leaflet").Marker }>>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const conversationRef = useRef<AcceptanceConversationMessage[]>([]);
   const selectedLanguageRef = useRef<AcceptanceLanguage>("ja");
@@ -207,9 +209,15 @@ export function HeroMap() {
   }, [selectedTaskId]);
 
   useEffect(() => {
-    const speechOutputSupported = typeof window !== "undefined" && "speechSynthesis" in window;
     setIsVoiceSupported(Boolean(getRecognitionCtor()));
-    setIsSpeechOutputEnabled(speechOutputSupported);
+    setIsSpeechOutputEnabled(typeof window !== "undefined" && typeof window.Audio !== "undefined");
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stopRecognition();
+      stopAudioPlayback();
+    };
   }, []);
 
   useEffect(() => {
@@ -477,11 +485,19 @@ export function HeroMap() {
     recognitionRef.current = null;
   }
 
+  function stopAudioPlayback() {
+    audioRef.current?.pause();
+    audioRef.current = null;
+
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
+  }
+
   function closeAcceptanceSheet() {
     stopRecognition();
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
+    stopAudioPlayback();
     setIsAcceptanceOpen(false);
     setAcceptanceState("idle");
     setSelectedTaskId(null);
@@ -493,19 +509,58 @@ export function HeroMap() {
   }
 
   async function speakAssistantText(text: string, nextState: AcceptanceState) {
-    if (!isSpeechOutputEnabled || typeof window === "undefined" || !("speechSynthesis" in window)) {
+    if (!isSpeechOutputEnabled || typeof window === "undefined") {
       setAcceptanceState(nextState);
       return;
     }
 
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = getLanguageCode(selectedLanguageRef.current);
-    utterance.onend = () => {
-      setAcceptanceState(nextState);
-    };
+    stopAudioPlayback();
     setAcceptanceState("speaking");
-    window.speechSynthesis.speak(utterance);
+
+    try {
+      const response = await fetch("/api/voice/tts", {
+        body: JSON.stringify({
+          language: selectedLanguageRef.current,
+          text,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? "Speech output is unavailable right now.");
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+
+      audioRef.current = audio;
+      audioUrlRef.current = audioUrl;
+
+      await new Promise<void>((resolve, reject) => {
+        audio.onended = () => {
+          stopAudioPlayback();
+          setAcceptanceState(nextState);
+          resolve();
+        };
+        audio.onerror = () => {
+          stopAudioPlayback();
+          setAcceptanceState(nextState);
+          setVoiceError("Speech output is unavailable right now.");
+          reject(new Error("Speech output is unavailable right now."));
+        };
+
+        audio.play().catch(reject);
+      });
+    } catch (error) {
+      stopAudioPlayback();
+      setAcceptanceState(nextState);
+      setVoiceError(error instanceof Error ? error.message : "Speech output is unavailable right now.");
+    }
   }
 
   async function requestAssistantReply(userTranscript: string) {
@@ -638,17 +693,10 @@ export function HeroMap() {
     const latestAssistantMessage = [...conversation].reverse().find((message) => message.role === "assistant");
 
     if (latestAssistantMessage && isSpeechOutputEnabled) {
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(latestAssistantMessage.content);
-        utterance.lang = getLanguageCode(selectedLanguageRef.current);
-        utterance.onend = () => {
-          startListening();
-        };
-        setAcceptanceState("speaking");
-        window.speechSynthesis.speak(utterance);
-        return;
-      }
+      void speakAssistantText(latestAssistantMessage.content, "briefing").then(() => {
+        startListening();
+      });
+      return;
     }
 
     startListening();
@@ -661,9 +709,7 @@ export function HeroMap() {
     }
 
     stopRecognition();
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
+    stopAudioPlayback();
 
     setConversation([]);
     setTextReply("");
@@ -675,6 +721,7 @@ export function HeroMap() {
 
   function handleDecline() {
     stopRecognition();
+    stopAudioPlayback();
     setAcceptanceState("declined");
     setConversation((current) => [
       ...current,
