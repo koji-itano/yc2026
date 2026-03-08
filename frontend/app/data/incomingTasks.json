@@ -1,0 +1,92 @@
+[
+  {
+    "eta": "ETA 00:30",
+    "id": "task-shrine-monitor-1",
+    "lane": "Camera lane A1",
+    "location": "Yaoyorozu Shrine — Main Hall",
+    "locationArea": "Yaoyorozu Shrine",
+    "markerLabel": "MON",
+    "priority": "high",
+    "requiredSkill": "Monitoring",
+    "reward": "+30 security XP",
+    "searchProfile": {
+      "functions": ["Operations"],
+      "titleKeywords": ["security", "monitoring", "surveillance", "field operations", "camera operator"]
+    },
+    "summary": "Suspicious shadow detected on the main hall camera feed. Please inspect the site and file a visual report.",
+    "title": "Main Hall Camera Inspection",
+    "type": "Monitoring"
+  },
+  {
+    "eta": "ETA 01:00",
+    "id": "task-shrine-alert-1",
+    "lane": "Alert lane B2",
+    "location": "Yaoyorozu Shrine — Approach Gate",
+    "locationArea": "Yaoyorozu Shrine",
+    "markerLabel": "ALT",
+    "priority": "high",
+    "requiredSkill": "Security",
+    "reward": "+35 alert XP",
+    "searchProfile": {
+      "functions": ["Operations"],
+      "titleKeywords": ["security guard", "patrol", "incident response", "field support", "safety officer"]
+    },
+    "summary": "Suspicious individual reported near the approach gate. Patrol the area and assess the situation.",
+    "title": "Approach Gate Suspicious Person",
+    "type": "Alert"
+  },
+  {
+    "eta": "ETA 02:15",
+    "id": "task-shrine-insp-1",
+    "lane": "Ops lane C3",
+    "location": "Yaoyorozu Shrine — Office",
+    "locationArea": "Yaoyorozu Shrine",
+    "markerLabel": "INSP",
+    "priority": "medium",
+    "requiredSkill": "Inspection",
+    "reward": "+22 inspection XP",
+    "searchProfile": {
+      "functions": ["Operations"],
+      "titleKeywords": ["inspection", "quality assurance", "facility manager", "site manager", "field operations"]
+    },
+    "summary": "Camera unit #3 at the shrine office is unresponsive. Check hardware status and attempt a reboot.",
+    "title": "Camera #3 Fault Response",
+    "type": "Inspection"
+  },
+  {
+    "eta": "ETA 03:00",
+    "id": "task-shrine-nav-1",
+    "lane": "Guide lane D1",
+    "location": "Yaoyorozu Shrine — Inner Sanctuary",
+    "locationArea": "Yaoyorozu Shrine",
+    "markerLabel": "NAV",
+    "priority": "medium",
+    "requiredSkill": "Navigation",
+    "reward": "+18 route XP",
+    "searchProfile": {
+      "functions": ["Support"],
+      "titleKeywords": ["concierge", "guide", "community manager", "visitor experience", "field support"]
+    },
+    "summary": "Night access to the inner sanctuary is blocked. Verify the alternate route and assist with signage placement.",
+    "title": "Inner Sanctuary Night Route Setup",
+    "type": "Navigation"
+  },
+  {
+    "eta": "ETA 04:30",
+    "id": "task-shrine-learn-1",
+    "lane": "Research lane E2",
+    "location": "Yaoyorozu Shrine — Grounds",
+    "locationArea": "Yaoyorozu Shrine",
+    "markerLabel": "RES",
+    "priority": "low",
+    "requiredSkill": "Field Research",
+    "reward": "+15 model XP",
+    "searchProfile": {
+      "functions": ["Research"],
+      "titleKeywords": ["researcher", "field research", "data collection", "interviewer", "community manager"]
+    },
+    "summary": "Collect late-night visitor flow data across the grounds. Log congestion points to improve AI routing models.",
+    "title": "Late-Night Visitor Flow Survey",
+    "type": "Learning"
+  }
+]

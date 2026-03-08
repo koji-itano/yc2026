@@ -7,7 +7,7 @@
 >
 > AIが現実世界の仕事をクエストのように依頼し、人間がガイダンスを受けて実行するプラットフォームを構築する。
 
-**チーム / Team:** Koji Itano, Sota Kobayashi, Sam Lo
+**チーム / Team:** 5 members
 **テーマ / Theme:** #7 — AI Guidance for Physical Work (YC RFS Spring 2026)
 **App Name:** Real Physical Gigs (`R.P.G.`)
 
@@ -23,8 +23,8 @@ yc2026/
 │   ├── c0mpiled_hackathon_emails.md       #   全15メール + 全リンク / All emails + links
 │   ├── YC_RFS_Spring2026.md               #   YC RFS 10テーマ全文 / Full text
 │   ├── 20260308_team_building_slides.md   #   チームビルディング資料 / Session slides
-│   ├── team_building_responses.xlsx       #   参加者フォーム (92人) / Participant data
-│   ├── team_building_analysis.md          #   参加者・競合分析 / Competitor analysis
+│   ├── (removed)                          #   参加者フォーム — 個人情報のため削除
+│   ├── (removed)                          #   参加者分析 — 個人情報のため削除
 │   ├── tools_blaxel.md                    #   Blaxel — 永続サンドボックス
 │   ├── tools_superset.md                  #   Superset — 並列AIエージェント
 │   ├── tools_crustdata.md                 #   CrustData — B2B企業データAPI
