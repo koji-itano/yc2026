@@ -870,7 +870,8 @@ function ensureOverlay() {
 function render() {
   const cameraActive = isDesktopBrowser() ? state.desktopWebcamEnabled : true;
   const imageTargetActive = isImageTargetActive();
-  const showDetectionGuide = cameraActive && !state.targetLocked;
+  const xrCameraReady = /^XR8 hasVideo/i.test(state.cameraStatus);
+  const showDetectionGuide = cameraActive && xrCameraReady && !state.targetLocked;
 
   DOM.overlay.classList.toggle("rpg-focus-mode", state.focusMode);
   DOM.targetFoundChip.textContent = `Image target: ${imageTargetActive ? "found" : "waiting"}`;
@@ -881,7 +882,7 @@ function render() {
   DOM.detectionGuide.style.display = showDetectionGuide ? "flex" : "none";
   DOM.detectionTitle.textContent = getTargetProfiles()[state.activeTargetProfile].waitingTitle;
   DOM.detectionBody.textContent = getTargetProfiles()[state.activeTargetProfile].waitingBody;
-  DOM.guidance.style.display = imageTargetActive ? "flex" : "none";
+  DOM.guidance.style.display = imageTargetActive && xrCameraReady ? "flex" : "none";
   DOM.guidanceLabel.textContent = `Target found: ${state.targetName}. Turn clockwise to secure the cap.`;
   DOM.focusButton.style.display = cameraActive ? "inline-flex" : "none";
   DOM.focusButton.textContent = state.focusMode ? "Show controls" : "Hide controls";
@@ -927,11 +928,16 @@ function toggleFocusMode() {
 }
 
 function buildNote() {
+  const xrCameraReady = /^XR8 hasVideo/i.test(state.cameraStatus);
+
   if (!state.targetLocked) {
     if (isDesktopBrowser() && !state.desktopWebcamEnabled) {
       return "On Mac desktop, click Enable desktop webcam to test the 8th Wall overlay with the browser camera API.";
     }
     if (!isDesktopBrowser()) {
+      if (!xrCameraReady) {
+        return "Allow camera access in Safari to start 8th Wall World tracking.";
+      }
       return `Use the 8th Wall World camera feed and scan ${state.activeTargetLabel}. Keep it flat, centered, and well lit.`;
     }
     if (state.imageTargetsConfigured.length) {
