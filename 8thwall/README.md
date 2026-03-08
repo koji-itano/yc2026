@@ -33,7 +33,7 @@ It adds:
 
 - a phone-first canister guidance HUD,
 - before / after evidence capture from the live 8th Wall canvas,
-- proof JSON generation for dashboard handoff,
+- proof JSON generation plus server-backed dashboard handoff,
 - listeners for `reality.imagescanning`, `reality.imagefound`, `reality.imageupdated`,
   `reality.imagelost`, and `reality.trackingstatus`,
 - a manual lock fallback when image-target data is not yet configured.
@@ -52,12 +52,31 @@ devServer: {
 
 1. Run `npm run serve`.
 2. Open the printed network URL on the phone over the same Wi-Fi.
-3. This export now loads two generated image targets by default:
+3. Open the same URL with `?role=dashboard` on the laptop to receive proof handoff.
+4. This export now loads two generated image targets by default:
 
 - `image-targets/itoen-bottle-168h.json`
 - `image-targets/canister-cap.json`
 
-4. If target lock is unstable, use `Lock manual anchor` and continue the same proof flow.
+5. On the phone, track the Ito En bottle, `Capture before`, `Mark cap secured`, `Capture after`, and then press `Generate proof JSON`.
+6. The worker page now posts the handoff to the same HTTPS dev server at `/api/handoff`, so the laptop dashboard receives it live.
+7. If target lock is unstable, use `Lock manual anchor` and continue the same proof flow.
+
+### Dashboard receiver
+
+- Worker URL: `https://<host>:8443/`
+- Dashboard URL: `https://<host>:8443/?role=dashboard`
+
+The built-in dev server now exposes:
+
+- `POST /api/handoff`
+- `GET /api/handoff/latest`
+- `GET /api/handoff/events`
+- `POST /api/verification`
+- `GET /api/verification/latest`
+- `GET /api/verification/events`
+
+This lets the iPhone worker flow and the Mac dashboard share proof and verification state over the same HTTPS origin.
 
 ### Mac desktop browser testing
 

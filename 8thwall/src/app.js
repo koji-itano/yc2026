@@ -1,7 +1,15 @@
 import itoenBottleTarget from '../image-targets/itoen-bottle-168h.json'
 import canisterCapTarget from '../image-targets/canister-cap.json'
 
+const PROOF_HANDOFF_STORAGE_KEY = "rpg:latest-proof-handoff";
+const PROOF_HANDOFF_CHANNEL = "rpg-proof-handoff";
+const VERIFICATION_STORAGE_KEY = "rpg:latest-verification";
+const VERIFICATION_CHANNEL = "rpg-verification";
+const HANDOFF_API_ENDPOINT = "/api/handoff";
+const VERIFICATION_API_ENDPOINT = "/api/verification";
+
 const state = {
+  appRole: readAppRole(),
   sessionId: newSessionId(),
   taskId: "WIL-9-canister",
   taskLabel: "Canister secure check",
@@ -18,6 +26,8 @@ const state = {
   afterCapture: null,
   instructionCompletedAt: null,
   proofRecord: null,
+  handoffRecord: null,
+  verificationRecord: null,
   eventLog: [],
   imageTargetsConfigured: [],
   activeTargetProfile: "itoen-bottle",
@@ -29,9 +39,19 @@ const state = {
   liveCameraEnabled: false,
   liveCameraStream: null,
   focusMode: false,
+  targetScreenPose: null,
 };
 
 const DOM = {};
+let proofChannel = null;
+let verificationChannel = null;
+let proofEventSource = null;
+let verificationEventSource = null;
+
+function readAppRole() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("role") === "dashboard" ? "dashboard" : "worker";
+}
 
 function newSessionId() {
   const stamp = new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14);
@@ -41,6 +61,111 @@ function newSessionId() {
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+function getWorkerUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("role");
+  return url.toString();
+}
+
+function getDashboardUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("role", "dashboard");
+  return url.toString();
+}
+
+function getProofChannel() {
+  if (proofChannel || typeof BroadcastChannel !== "function") {
+    return proofChannel;
+  }
+
+  proofChannel = new BroadcastChannel(PROOF_HANDOFF_CHANNEL);
+  return proofChannel;
+}
+
+function getVerificationChannel() {
+  if (verificationChannel || typeof BroadcastChannel !== "function") {
+    return verificationChannel;
+  }
+
+  verificationChannel = new BroadcastChannel(VERIFICATION_CHANNEL);
+  return verificationChannel;
+}
+
+function safeReadStoredJson(key) {
+  if (!window.localStorage || typeof window.localStorage.getItem !== "function") {
+    return null;
+  }
+
+  const raw = window.localStorage.getItem(key);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    return null;
+  }
+}
+
+async function fetchJson(url) {
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+async function postJson(url, payload) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function pickNumber(...values) {
+  return values.find((value) => typeof value === "number" && Number.isFinite(value));
+}
+
+function extractTargetPose(detail = {}) {
+  const x = pickNumber(detail.x, detail.position?.x, detail.center?.x, detail.coordinates?.x, 0.5);
+  const y = pickNumber(detail.y, detail.position?.y, detail.center?.y, detail.coordinates?.y, 0.58);
+  const scale = pickNumber(
+    detail.scale,
+    detail.position?.scale,
+    detail.size?.height,
+    detail.extent?.height,
+    0.32,
+  );
+
+  return {
+    x: clamp(x, 0.1, 0.9),
+    y: clamp(y, 0.15, 0.9),
+    scale: clamp(scale, 0.12, 0.7),
+  };
 }
 
 function recordEvent(type, detail = {}) {
@@ -109,6 +234,173 @@ function formatTargetName(name) {
   return name
 }
 
+function buildWorkerOverlayHtml() {
+  return `
+    <section class="rpg-topbar">
+      <p class="rpg-eyebrow">Real Physical Gigs x 8th Wall</p>
+      <h1 class="rpg-title">Canister AR guidance</h1>
+      <p class="rpg-subtitle">
+        Tabletop worker flow for tightening the canister cap, capturing before/after proof, and
+        handing a structured record back to the dashboard.
+      </p>
+      <div class="rpg-chip-row">
+        <span class="rpg-chip" id="rpg-target-found-chip">Image target: waiting</span>
+        <span class="rpg-chip" id="rpg-status-chip">Status: booting</span>
+        <span class="rpg-chip" id="rpg-expected-target-chip">Expected: Ito En bottle front</span>
+        <span class="rpg-chip" id="rpg-target-chip">Target: waiting</span>
+        <span class="rpg-chip" id="rpg-camera-chip">Camera: booting</span>
+        <button id="rpg-focus-button" class="rpg-focus-toggle" type="button">Hide controls</button>
+      </div>
+    </section>
+    <div class="rpg-detection-guide" id="rpg-detection-guide">
+      <div class="rpg-detection-frame" aria-hidden="true"></div>
+      <div class="rpg-detection-copy">
+        <p class="rpg-detection-title" id="rpg-detection-title">Use the Ito En bottle front</p>
+        <p class="rpg-detection-body" id="rpg-detection-body">
+          Keep the bottle front upright and centered so the green label fills about half the frame.
+        </p>
+      </div>
+    </div>
+    <div class="rpg-guidance" id="rpg-guidance">
+      <div class="rpg-guidance-arrow" aria-hidden="true">↻</div>
+      <div class="rpg-guidance-label" id="rpg-guidance-label">Turn clockwise to secure the cap.</div>
+    </div>
+    <div class="rpg-main">
+      <section class="rpg-card">
+        <p class="rpg-eyebrow">Worker task</p>
+        <h2>Turn clockwise to secure the cap.</h2>
+        <dl class="rpg-meta">
+          <div>
+            <dt>Task ID</dt>
+            <dd id="rpg-task-id"></dd>
+          </div>
+          <div>
+            <dt>Worker ID</dt>
+            <dd id="rpg-worker-id"></dd>
+          </div>
+          <div>
+            <dt>Session ID</dt>
+            <dd id="rpg-session-id"></dd>
+          </div>
+          <div>
+            <dt>Attempt</dt>
+            <dd id="rpg-attempt"></dd>
+          </div>
+        </dl>
+        <p class="rpg-note" id="rpg-note">
+          Waiting for 8th Wall runtime and image target callbacks.
+        </p>
+        <div class="rpg-actions">
+          <button id="rpg-webcam-button" class="secondary">Enable desktop webcam</button>
+          <button id="rpg-lock-button" class="secondary">Lock manual anchor</button>
+          <button id="rpg-before-button" class="secondary">Capture before</button>
+          <button id="rpg-done-button" class="secondary">Mark cap secured</button>
+          <button id="rpg-after-button" class="secondary">Capture after</button>
+          <button id="rpg-proof-button">Generate proof JSON</button>
+          <button id="rpg-copy-button" class="secondary">Copy proof</button>
+        </div>
+        <div class="rpg-preview-row">
+          <div class="rpg-preview">
+            <div class="rpg-preview-label">Before</div>
+            <div id="rpg-before-slot" class="rpg-preview-empty">No capture yet.</div>
+          </div>
+          <div class="rpg-preview">
+            <div class="rpg-preview-label">After</div>
+            <div id="rpg-after-slot" class="rpg-preview-empty">No capture yet.</div>
+          </div>
+        </div>
+      </section>
+      <section class="rpg-proof">
+        <p class="rpg-eyebrow">Structured handoff</p>
+        <h2>Proof package</h2>
+        <pre id="rpg-proof-output">Capture before/after evidence to generate a proof package.</pre>
+        <div class="rpg-log" id="rpg-log"></div>
+      </section>
+    </div>
+  `;
+}
+
+function buildDashboardOverlayHtml() {
+  return `
+    <section class="rpg-topbar">
+      <p class="rpg-eyebrow">Real Physical Gigs x 8th Wall</p>
+      <h1 class="rpg-title">Proof receiver dashboard</h1>
+      <p class="rpg-subtitle">
+        Review worker proof, inspect before/after evidence, and return a verification result to the phone.
+      </p>
+      <div class="rpg-chip-row">
+        <span class="rpg-chip" id="rpg-receiver-status-chip">Waiting for worker handoff</span>
+        <span class="rpg-chip" id="rpg-receiver-route-chip">Route: server event bus</span>
+        <button id="rpg-refresh-button" class="rpg-focus-toggle" type="button">Refresh</button>
+      </div>
+    </section>
+    <div class="rpg-dashboard-main">
+      <section class="rpg-card">
+        <p class="rpg-eyebrow">Incoming proof</p>
+        <h2 id="rpg-dashboard-summary-title">Proof package ready for verification</h2>
+        <dl class="rpg-meta">
+          <div>
+            <dt>Task ID</dt>
+            <dd id="rpg-dashboard-task-id">No handoff yet</dd>
+          </div>
+          <div>
+            <dt>Worker ID</dt>
+            <dd id="rpg-dashboard-worker-id">No handoff yet</dd>
+          </div>
+          <div>
+            <dt>Provider</dt>
+            <dd id="rpg-dashboard-provider">No handoff yet</dd>
+          </div>
+          <div>
+            <dt>Attempt</dt>
+            <dd id="rpg-dashboard-attempt">Awaiting proof</dd>
+          </div>
+          <div>
+            <dt>Result</dt>
+            <dd id="rpg-dashboard-result">Awaiting proof</dd>
+          </div>
+          <div>
+            <dt>Task Class</dt>
+            <dd id="rpg-dashboard-task-class">Awaiting proof</dd>
+          </div>
+        </dl>
+        <p class="rpg-note" id="rpg-dashboard-summary">
+          Open the worker page on the phone and submit proof to populate this dashboard.
+        </p>
+        <label class="rpg-note-field" for="rpg-verification-note-input">
+          Verification note
+          <textarea id="rpg-verification-note-input" placeholder="Optional note to send back to the worker"></textarea>
+        </label>
+        <p class="rpg-note" id="rpg-verification-action-summary">
+          Choose a verification outcome after reviewing the proof package.
+        </p>
+        <div class="rpg-dashboard-actions">
+          <button id="rpg-verify-button" type="button">Verify proof</button>
+          <button id="rpg-retry-button" class="secondary" type="button">Request retry</button>
+        </div>
+        <div class="rpg-preview-row">
+          <div class="rpg-preview">
+            <div class="rpg-preview-label">Before</div>
+            <div class="rpg-preview-label" id="rpg-dashboard-before-meta">Not available</div>
+            <div id="rpg-dashboard-before-slot" class="rpg-preview-empty">No evidence yet.</div>
+          </div>
+          <div class="rpg-preview">
+            <div class="rpg-preview-label">After</div>
+            <div class="rpg-preview-label" id="rpg-dashboard-after-meta">Not available</div>
+            <div id="rpg-dashboard-after-slot" class="rpg-preview-empty">No evidence yet.</div>
+          </div>
+        </div>
+      </section>
+      <section class="rpg-proof">
+        <p class="rpg-eyebrow">Payload</p>
+        <h2>Structured handoff</h2>
+        <pre id="rpg-dashboard-payload">Awaiting structured proof handoff.</pre>
+        <div class="rpg-log" id="rpg-dashboard-event-log">Awaiting worker session events.</div>
+      </section>
+    </div>
+  `;
+}
+
 function ensureOverlay() {
   const style = document.createElement("style");
   style.textContent = `
@@ -157,8 +449,23 @@ function ensureOverlay() {
     }
 
     #rpg-overlay.rpg-focus-mode .rpg-topbar {
-      padding-bottom: 10px;
+      padding: 10px 12px;
       background: rgba(8, 14, 19, 0.46);
+    }
+
+    #rpg-overlay.rpg-focus-mode .rpg-title {
+      font-size: 20px;
+    }
+
+    #rpg-overlay.rpg-focus-mode .rpg-chip-row {
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    #rpg-overlay.rpg-focus-mode .rpg-chip,
+    #rpg-overlay.rpg-focus-mode .rpg-focus-toggle {
+      min-height: 28px;
+      font-size: 11px;
     }
 
     #rpg-overlay.rpg-focus-mode .rpg-subtitle,
@@ -346,21 +653,21 @@ function ensureOverlay() {
     .rpg-guidance {
       position: fixed;
       left: 50%;
-      bottom: 15vh;
-      transform: translateX(-50%);
+      top: 48%;
+      transform: translate(-50%, -50%);
       z-index: 9000;
       display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      width: min(90vw, 560px);
+      gap: 8px;
+      width: min(64vw, 320px);
       pointer-events: none;
     }
 
     .rpg-guidance-arrow {
       display: block;
-      font-size: 84px;
+      font-size: 72px;
       line-height: 1;
       color: #eef7fb;
       text-shadow:
@@ -374,14 +681,14 @@ function ensureOverlay() {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      max-width: min(90vw, 560px);
-      min-height: 42px;
-      padding: 10px 16px;
-      border-radius: 999px;
+      max-width: min(74vw, 360px);
+      min-height: 40px;
+      padding: 8px 14px;
+      border-radius: 18px;
       border: 1px solid rgba(108, 240, 178, 0.38);
       background: rgba(8, 14, 19, 0.74);
       backdrop-filter: blur(18px);
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       letter-spacing: 0.01em;
       color: #eef7fb;
@@ -493,6 +800,63 @@ function ensureOverlay() {
 
     .rpg-log-entry + .rpg-log-entry {
       margin-top: 6px;
+    }
+
+    .rpg-dashboard-main {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      min-height: 0;
+    }
+
+    .rpg-dashboard-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .rpg-dashboard-actions button {
+      appearance: none;
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: #05212b;
+      background: linear-gradient(135deg, #8be6ff, #6cf0b2);
+      box-shadow: 0 10px 24px rgba(108, 240, 178, 0.2);
+    }
+
+    .rpg-dashboard-actions button.secondary {
+      color: var(--rpg-text);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: none;
+    }
+
+    .rpg-dashboard-actions button:disabled {
+      opacity: 0.45;
+    }
+
+    .rpg-note-field {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--rpg-muted);
+    }
+
+    .rpg-note-field textarea {
+      width: 100%;
+      min-height: 72px;
+      resize: vertical;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--rpg-text);
+      padding: 10px 12px;
+      font: inherit;
     }
 
     .rpg-preview-row {
@@ -742,7 +1106,7 @@ function ensureOverlay() {
       }
 
       .rpg-guidance-label {
-        max-width: calc(100vw - 48px);
+        max-width: min(calc(100vw - 48px), 300px);
         font-size: 12px;
       }
 
@@ -760,92 +1124,41 @@ function ensureOverlay() {
 
   const overlay = document.createElement("div");
   overlay.id = "rpg-overlay";
-  overlay.innerHTML = `
-    <section class="rpg-topbar">
-      <p class="rpg-eyebrow">Real Physical Gigs x 8th Wall</p>
-      <h1 class="rpg-title">Canister AR guidance</h1>
-      <p class="rpg-subtitle">
-        Tabletop worker flow for tightening the canister cap, capturing before/after proof, and
-        handing a structured record back to the dashboard.
-      </p>
-      <div class="rpg-chip-row">
-        <span class="rpg-chip" id="rpg-target-found-chip">Image target: waiting</span>
-        <span class="rpg-chip" id="rpg-status-chip">Status: booting</span>
-        <span class="rpg-chip" id="rpg-expected-target-chip">Expected: Ito En bottle front</span>
-        <span class="rpg-chip" id="rpg-target-chip">Target: waiting</span>
-        <span class="rpg-chip" id="rpg-camera-chip">Camera: booting</span>
-        <button id="rpg-focus-button" class="rpg-focus-toggle" type="button">Hide controls</button>
-      </div>
-    </section>
-    <div class="rpg-detection-guide" id="rpg-detection-guide">
-      <div class="rpg-detection-frame" aria-hidden="true"></div>
-      <div class="rpg-detection-copy">
-        <p class="rpg-detection-title" id="rpg-detection-title">Use the Ito En bottle front</p>
-        <p class="rpg-detection-body" id="rpg-detection-body">
-          Keep the bottle front upright and centered so the green label fills about half the frame.
-        </p>
-      </div>
-    </div>
-    <div class="rpg-guidance" id="rpg-guidance">
-      <div class="rpg-guidance-arrow" aria-hidden="true">↻</div>
-      <div class="rpg-guidance-label" id="rpg-guidance-label">Turn clockwise to secure the cap.</div>
-    </div>
-    <div class="rpg-main">
-      <section class="rpg-card">
-        <p class="rpg-eyebrow">Worker task</p>
-        <h2>Turn clockwise to secure the cap.</h2>
-        <dl class="rpg-meta">
-          <div>
-            <dt>Task ID</dt>
-            <dd id="rpg-task-id"></dd>
-          </div>
-          <div>
-            <dt>Worker ID</dt>
-            <dd id="rpg-worker-id"></dd>
-          </div>
-          <div>
-            <dt>Session ID</dt>
-            <dd id="rpg-session-id"></dd>
-          </div>
-          <div>
-            <dt>Attempt</dt>
-            <dd id="rpg-attempt"></dd>
-          </div>
-        </dl>
-        <p class="rpg-note" id="rpg-note">
-          Waiting for 8th Wall runtime and image target callbacks.
-        </p>
-        <div class="rpg-actions">
-          <button id="rpg-webcam-button" class="secondary">Enable desktop webcam</button>
-          <button id="rpg-lock-button" class="secondary">Lock manual anchor</button>
-          <button id="rpg-before-button" class="secondary">Capture before</button>
-          <button id="rpg-done-button" class="secondary">Mark cap secured</button>
-          <button id="rpg-after-button" class="secondary">Capture after</button>
-          <button id="rpg-proof-button">Generate proof JSON</button>
-          <button id="rpg-copy-button" class="secondary">Copy proof</button>
-        </div>
-        <div class="rpg-preview-row">
-          <div class="rpg-preview">
-            <div class="rpg-preview-label">Before</div>
-            <div id="rpg-before-slot" class="rpg-preview-empty">No capture yet.</div>
-          </div>
-          <div class="rpg-preview">
-            <div class="rpg-preview-label">After</div>
-            <div id="rpg-after-slot" class="rpg-preview-empty">No capture yet.</div>
-          </div>
-        </div>
-      </section>
-      <section class="rpg-proof">
-        <p class="rpg-eyebrow">Structured handoff</p>
-        <h2>Proof package</h2>
-        <pre id="rpg-proof-output">Capture before/after evidence to generate a proof package.</pre>
-        <div class="rpg-log" id="rpg-log"></div>
-      </section>
-    </div>
-  `;
+  overlay.innerHTML = state.appRole === "dashboard"
+    ? buildDashboardOverlayHtml()
+    : buildWorkerOverlayHtml();
   document.body.appendChild(overlay);
 
   DOM.overlay = overlay;
+  if (state.appRole === "dashboard") {
+    DOM.receiverStatusChip = document.getElementById("rpg-receiver-status-chip");
+    DOM.receiverRouteChip = document.getElementById("rpg-receiver-route-chip");
+    DOM.refreshButton = document.getElementById("rpg-refresh-button");
+    DOM.dashboardSummaryTitle = document.getElementById("rpg-dashboard-summary-title");
+    DOM.dashboardTaskId = document.getElementById("rpg-dashboard-task-id");
+    DOM.dashboardWorkerId = document.getElementById("rpg-dashboard-worker-id");
+    DOM.dashboardProvider = document.getElementById("rpg-dashboard-provider");
+    DOM.dashboardAttempt = document.getElementById("rpg-dashboard-attempt");
+    DOM.dashboardResult = document.getElementById("rpg-dashboard-result");
+    DOM.dashboardTaskClass = document.getElementById("rpg-dashboard-task-class");
+    DOM.dashboardSummary = document.getElementById("rpg-dashboard-summary");
+    DOM.dashboardBeforeMeta = document.getElementById("rpg-dashboard-before-meta");
+    DOM.dashboardAfterMeta = document.getElementById("rpg-dashboard-after-meta");
+    DOM.dashboardBeforeSlot = document.getElementById("rpg-dashboard-before-slot");
+    DOM.dashboardAfterSlot = document.getElementById("rpg-dashboard-after-slot");
+    DOM.dashboardPayload = document.getElementById("rpg-dashboard-payload");
+    DOM.dashboardEventLog = document.getElementById("rpg-dashboard-event-log");
+    DOM.verificationNoteInput = document.getElementById("rpg-verification-note-input");
+    DOM.verificationActionSummary = document.getElementById("rpg-verification-action-summary");
+    DOM.verifyButton = document.getElementById("rpg-verify-button");
+    DOM.retryButton = document.getElementById("rpg-retry-button");
+
+    DOM.refreshButton.addEventListener("click", loadLatestHandoff);
+    DOM.verifyButton.addEventListener("click", () => publishVerification("verified"));
+    DOM.retryButton.addEventListener("click", () => publishVerification("needs_retry"));
+    return;
+  }
+
   DOM.targetFoundChip = document.getElementById("rpg-target-found-chip");
   DOM.statusChip = document.getElementById("rpg-status-chip");
   DOM.expectedTargetChip = document.getElementById("rpg-expected-target-chip");
@@ -888,6 +1201,15 @@ function ensureOverlay() {
 }
 
 function render() {
+  if (state.appRole === "dashboard") {
+    renderDashboard();
+    return;
+  }
+
+  renderWorker();
+}
+
+function renderWorker() {
   const cameraActive = isDesktopBrowser() ? state.desktopWebcamEnabled : true;
   const imageTargetActive = isImageTargetActive();
   const xrCameraReady = /^XR8 hasVideo/i.test(state.cameraStatus);
@@ -904,6 +1226,7 @@ function render() {
   DOM.detectionBody.textContent = getTargetProfiles()[state.activeTargetProfile].waitingBody;
   DOM.guidance.style.display = imageTargetActive && xrCameraReady ? "flex" : "none";
   DOM.guidanceLabel.textContent = `Target found: ${formatTargetName(state.targetName)}. Turn clockwise to secure the cap.`;
+  applyGuidanceLayout();
   DOM.focusButton.style.display = cameraActive ? "inline-flex" : "none";
   DOM.focusButton.textContent = state.focusMode ? "Show controls" : "Hide controls";
   DOM.taskId.textContent = state.taskId;
@@ -911,9 +1234,11 @@ function render() {
   DOM.sessionId.textContent = state.sessionId;
   DOM.attempt.textContent = String(state.attemptNumber);
   DOM.note.textContent = buildNote();
-  DOM.proofOutput.textContent = state.proofRecord
-    ? JSON.stringify(state.proofRecord, null, 2)
-    : "Capture before/after evidence to generate a proof package.";
+  DOM.proofOutput.textContent = state.handoffRecord
+    ? JSON.stringify(state.handoffRecord, null, 2)
+    : state.proofRecord
+      ? JSON.stringify(state.proofRecord, null, 2)
+      : "Capture before/after evidence to generate a proof package.";
   DOM.webcamButton.disabled = state.desktopWebcamEnabled;
   DOM.webcamButton.textContent = "Enable desktop webcam";
   DOM.webcamButton.style.display = isDesktopBrowser() ? "inline-flex" : "none";
@@ -930,8 +1255,103 @@ function render() {
   renderLog();
 }
 
+function renderDashboard() {
+  if (!state.handoffRecord || !state.handoffRecord.payload) {
+    DOM.receiverStatusChip.textContent = "Waiting for worker handoff";
+    DOM.receiverRouteChip.textContent = "Route: server event bus";
+    DOM.dashboardSummaryTitle.textContent = "Proof package ready for verification";
+    DOM.dashboardTaskId.textContent = "No handoff yet";
+    DOM.dashboardWorkerId.textContent = "No handoff yet";
+    DOM.dashboardProvider.textContent = "No handoff yet";
+    DOM.dashboardAttempt.textContent = "Awaiting proof";
+    DOM.dashboardResult.textContent = "Awaiting proof";
+    DOM.dashboardTaskClass.textContent = "Awaiting proof";
+    DOM.dashboardSummary.textContent =
+      "Open the worker page on the phone and submit proof to populate this dashboard.";
+    DOM.dashboardBeforeMeta.textContent = "Not available";
+    DOM.dashboardAfterMeta.textContent = "Not available";
+    renderImageSlot(DOM.dashboardBeforeSlot, null, "Before");
+    renderImageSlot(DOM.dashboardAfterSlot, null, "After");
+    DOM.dashboardPayload.textContent = "Awaiting structured proof handoff.";
+    DOM.dashboardEventLog.textContent = "Awaiting worker session events.";
+    DOM.verificationActionSummary.textContent =
+      "Choose a verification outcome after reviewing the proof package.";
+    DOM.verifyButton.disabled = true;
+    DOM.retryButton.disabled = true;
+    return;
+  }
+
+  const {payload} = state.handoffRecord;
+  const beforeEvidence = Array.isArray(payload.evidence)
+    ? payload.evidence.find((entry) => entry.kind === "before")
+    : null;
+  const afterEvidence = Array.isArray(payload.evidence)
+    ? payload.evidence.find((entry) => entry.kind === "after")
+    : null;
+
+  DOM.receiverStatusChip.textContent = "Worker proof received";
+  DOM.receiverRouteChip.textContent = `Route: ${state.handoffRecord.route || "server event bus"}`;
+  DOM.dashboardSummaryTitle.textContent = state.handoffRecord.summary || "Proof package received";
+  DOM.dashboardTaskId.textContent = payload.taskId || "Unknown";
+  DOM.dashboardWorkerId.textContent = payload.workerId || "Unknown";
+  DOM.dashboardProvider.textContent = payload.provider || "Unknown";
+  DOM.dashboardAttempt.textContent =
+    typeof payload.attemptNumber === "number" ? `Attempt ${payload.attemptNumber}` : "Unknown";
+  DOM.dashboardResult.textContent = payload.result || "proof_submitted";
+  DOM.dashboardTaskClass.textContent = payload.taskClass || "Unknown";
+  DOM.dashboardSummary.textContent =
+    `${payload.taskLabel || "Worker task"} from ${payload.workerId || "worker"} is ready for review.`;
+  DOM.dashboardBeforeMeta.textContent = beforeEvidence?.capturedAt || "Not available";
+  DOM.dashboardAfterMeta.textContent = afterEvidence?.capturedAt || "Not available";
+  renderImageSlot(
+    DOM.dashboardBeforeSlot,
+    beforeEvidence ? {dataUrl: beforeEvidence.previewDataUrl} : null,
+    "Before",
+  );
+  renderImageSlot(
+    DOM.dashboardAfterSlot,
+    afterEvidence ? {dataUrl: afterEvidence.previewDataUrl} : null,
+    "After",
+  );
+  DOM.dashboardPayload.textContent = JSON.stringify(state.handoffRecord, null, 2);
+  DOM.dashboardEventLog.textContent = Array.isArray(payload.eventLog) && payload.eventLog.length
+    ? JSON.stringify(payload.eventLog, null, 2)
+    : "Awaiting worker session events.";
+
+  if (state.verificationRecord && state.verificationRecord.sessionId === payload.sessionId) {
+    DOM.verificationActionSummary.textContent =
+      state.verificationRecord.result === "verified"
+        ? `Verification sent at ${state.verificationRecord.verifiedAt}.${state.verificationRecord.note ? ` Note: ${state.verificationRecord.note}` : ""}`
+        : `Retry requested at ${state.verificationRecord.verifiedAt}.${state.verificationRecord.note ? ` Note: ${state.verificationRecord.note}` : ""}`;
+  } else {
+    DOM.verificationActionSummary.textContent =
+      "Choose a verification outcome after reviewing the proof package.";
+  }
+
+  DOM.verifyButton.disabled = false;
+  DOM.retryButton.disabled = false;
+}
+
 function isImageTargetActive() {
   return state.targetLocked && state.anchorMode === "image-target";
+}
+
+function getGuidancePose() {
+  const pose = state.targetScreenPose || {x: 0.5, y: 0.58, scale: 0.32};
+  return {
+    left: clamp(pose.x ?? 0.5, 0.22, 0.78),
+    top: clamp((pose.y ?? 0.58) - Math.max(0.07, (pose.scale ?? 0.32) * 0.18), 0.24, 0.62),
+  };
+}
+
+function applyGuidanceLayout() {
+  if (!DOM.guidance) {
+    return;
+  }
+
+  const pose = getGuidancePose();
+  DOM.guidance.style.left = `${pose.left * 100}%`;
+  DOM.guidance.style.top = `${pose.top * 100}%`;
 }
 
 function syncSceneCanvasVisibility() {
@@ -978,7 +1398,17 @@ function buildNote() {
     return "Capture after evidence with the secured cap still visible in frame.";
   }
 
-  return "Proof package ready. Copy the JSON into the dashboard or handoff flow.";
+  if (!state.handoffRecord) {
+    return "Generate proof JSON to send the package to the laptop dashboard.";
+  }
+
+  if (state.verificationRecord) {
+    return state.verificationRecord.result === "verified"
+      ? "Dashboard verified the proof package."
+      : "Dashboard requested a retry. Capture a fresh attempt.";
+  }
+
+  return "Proof package sent. Open the laptop dashboard receiver to review and verify it.";
 }
 
 function renderImageSlot(node, capture, label) {
@@ -1251,6 +1681,10 @@ function captureEvidence(kind) {
   }
 
   try {
+    if (state.proofRecord || state.handoffRecord || state.verificationRecord) {
+      clearSubmissionState(`new_${kind}_capture`);
+    }
+
     const capture = canvas
       ? {
           at: nowIso(),
@@ -1266,7 +1700,7 @@ function captureEvidence(kind) {
     } else {
       state.afterCapture = capture;
     }
-    recordEvent("capture_saved", { kind, width: canvas.width, height: canvas.height });
+    recordEvent("capture_saved", { kind, width: capture.width, height: capture.height });
     render();
   } catch (error) {
     state.trackingStatus = "Canvas capture failed";
@@ -1275,9 +1709,26 @@ function captureEvidence(kind) {
   }
 }
 
-function generateProofRecord() {
-  state.attemptNumber += 1;
-  state.proofRecord = {
+function captureSummary(capture, kind) {
+  return {
+    kind,
+    capturedAt: capture.at,
+    previewDataUrl: capture.dataUrl,
+    width: capture.width,
+    height: capture.height,
+  };
+}
+
+function clearSubmissionState(reason) {
+  state.proofRecord = null;
+  state.handoffRecord = null;
+  state.verificationRecord = null;
+  recordEvent("submission_state_cleared", { reason });
+}
+
+function buildProofRecord() {
+  return {
+    schemaVersion: "rpg.canister-proof.v1",
     sessionId: state.sessionId,
     taskId: state.taskId,
     taskLabel: state.taskLabel,
@@ -1285,17 +1736,98 @@ function generateProofRecord() {
     taskClass: state.taskClass,
     instruction: state.instruction,
     provider: state.provider,
-    targetName: state.targetName,
+    targetName: formatTargetName(state.targetName),
     anchorMode: state.anchorMode,
     attemptNumber: state.attemptNumber,
     capturedAt: nowIso(),
     actionCompletedAt: state.instructionCompletedAt,
     beforeCapture: state.beforeCapture,
     afterCapture: state.afterCapture,
+    evidence: [
+      captureSummary(state.beforeCapture, "before"),
+      captureSummary(state.afterCapture, "after"),
+    ],
+    eventLog: [...state.eventLog],
+    dashboardHandoff: {
+      mode: "server event bus",
+      endpoint: HANDOFF_API_ENDPOINT,
+      dashboardUrl: getDashboardUrl(),
+      workerUrl: getWorkerUrl(),
+      dispatchedAt: null,
+      status: "ready",
+    },
+    result: "proof_submitted",
     verificationState: "proof_submitted",
+    readyForVerification: true,
   };
+}
+
+function buildHandoffRecord() {
+  if (!state.proofRecord) {
+    return null;
+  }
+
+  return {
+    eventType: "rpg:proof-ready",
+    issuedAt: nowIso(),
+    route: "server event bus",
+    summary: "AR guidance complete. Proof package ready for verification.",
+    payload: state.proofRecord,
+  };
+}
+
+async function dispatchProofRecord() {
+  if (!state.proofRecord) {
+    return;
+  }
+
+  state.handoffRecord = buildHandoffRecord();
+  state.proofRecord.dashboardHandoff.dispatchedAt = state.handoffRecord.issuedAt;
+  state.proofRecord.dashboardHandoff.status = "dispatched";
+  state.proofRecord.eventLog = [...state.eventLog];
+
+  let route = "server event bus";
+
+  try {
+    await postJson(HANDOFF_API_ENDPOINT, state.handoffRecord);
+  } catch (error) {
+    route = "browser fallback";
+    recordEvent("handoff_network_failed", { reason: error.message });
+  }
+
+  state.handoffRecord.route = route;
+
+  if (window.localStorage && typeof window.localStorage.setItem === "function") {
+    window.localStorage.setItem(PROOF_HANDOFF_STORAGE_KEY, JSON.stringify(state.handoffRecord));
+  }
+
+  const channel = getProofChannel();
+  if (channel && typeof channel.postMessage === "function") {
+    channel.postMessage(state.handoffRecord);
+  }
+
+  if (typeof window.dispatchEvent === "function" && typeof CustomEvent === "function") {
+    window.dispatchEvent(new CustomEvent("rpg:proof-ready", { detail: state.handoffRecord }));
+  }
+  state.trackingStatus = route === "server event bus"
+    ? "Proof sent to dashboard"
+    : "Proof saved locally for fallback review";
+  recordEvent("handoff_dispatched", { route });
+  render();
+}
+
+async function generateProofRecord() {
+  if (!state.beforeCapture || !state.afterCapture) {
+    state.trackingStatus = "Capture before and after evidence first";
+    render();
+    return;
+  }
+
+  state.attemptNumber += 1;
+  state.proofRecord = buildProofRecord();
   recordEvent("proof_generated", { attemptNumber: state.attemptNumber });
   render();
+  await dispatchProofRecord();
 }
 
 async function copyProofRecord() {
@@ -1317,12 +1849,157 @@ async function copyProofRecord() {
   render();
 }
 
+function applyVerificationRecord(record) {
+  if (!record || record.sessionId !== state.sessionId) {
+    return;
+  }
+
+  if (state.proofRecord && record.attemptNumber !== state.proofRecord.attemptNumber) {
+    recordEvent("stale_verification_ignored", {
+      attemptNumber: record.attemptNumber,
+      activeAttemptNumber: state.proofRecord.attemptNumber,
+      result: record.result,
+    });
+    return;
+  }
+
+  state.verificationRecord = record;
+  recordEvent("verification_received", {
+    attemptNumber: record.attemptNumber,
+    result: record.result,
+    note: record.note || "",
+  });
+
+  if (state.proofRecord) {
+    state.proofRecord.result = record.result;
+    state.proofRecord.readyForVerification = false;
+    state.proofRecord.verificationState = record.result;
+    state.proofRecord.dashboardHandoff.status = record.result;
+    state.proofRecord.dashboardHandoff.verifiedAt = record.verifiedAt;
+    state.proofRecord.eventLog = [...state.eventLog];
+  }
+
+  state.trackingStatus = record.result === "verified"
+    ? "Dashboard verified the proof"
+    : "Dashboard requested a retry";
+  render();
+}
+
+async function loadLatestHandoff() {
+  let latest = null;
+  let verification = null;
+
+  try {
+    latest = await fetchJson(`${HANDOFF_API_ENDPOINT}/latest`);
+  } catch (error) {
+    latest = safeReadStoredJson(PROOF_HANDOFF_STORAGE_KEY);
+  }
+
+  try {
+    verification = await fetchJson(`${VERIFICATION_API_ENDPOINT}/latest`);
+  } catch (error) {
+    verification = safeReadStoredJson(VERIFICATION_STORAGE_KEY);
+  }
+
+  state.handoffRecord = latest;
+  state.verificationRecord = latest && latest.payload ? verification : null;
+  render();
+}
+
+async function loadLatestVerification() {
+  let latest = null;
+
+  try {
+    latest = await fetchJson(`${VERIFICATION_API_ENDPOINT}/latest`);
+  } catch (error) {
+    latest = safeReadStoredJson(VERIFICATION_STORAGE_KEY);
+  }
+
+  if (latest) {
+    applyVerificationRecord(latest);
+  }
+}
+
+async function publishVerification(result) {
+  if (!state.handoffRecord || !state.handoffRecord.payload) {
+    DOM.verificationActionSummary.textContent = "No proof package is available to verify.";
+    return;
+  }
+
+  const record = {
+    eventType: "rpg:verification-updated",
+    sessionId: state.handoffRecord.payload.sessionId,
+    taskId: state.handoffRecord.payload.taskId,
+    workerId: state.handoffRecord.payload.workerId,
+    provider: state.handoffRecord.payload.provider,
+    taskClass: state.handoffRecord.payload.taskClass,
+    attemptNumber: state.handoffRecord.payload.attemptNumber,
+    result,
+    note: DOM.verificationNoteInput.value.trim(),
+    verifiedAt: nowIso(),
+  };
+
+  let route = "server event bus";
+  try {
+    await postJson(VERIFICATION_API_ENDPOINT, record);
+  } catch (error) {
+    route = "browser fallback";
+  }
+
+  if (window.localStorage && typeof window.localStorage.setItem === "function") {
+    window.localStorage.setItem(VERIFICATION_STORAGE_KEY, JSON.stringify(record));
+  }
+
+  const channel = getVerificationChannel();
+  if (channel && typeof channel.postMessage === "function") {
+    channel.postMessage(record);
+  }
+
+  state.verificationRecord = record;
+  DOM.verificationActionSummary.textContent = result === "verified"
+    ? `Verification sent over ${route}.${record.note ? ` Note: ${record.note}` : ""}`
+    : `Retry request sent over ${route}.${record.note ? ` Note: ${record.note}` : ""}`;
+  render();
+}
+
+function connectProofFeed() {
+  if (proofEventSource || typeof EventSource !== "function") {
+    return;
+  }
+
+  proofEventSource = new EventSource(`${HANDOFF_API_ENDPOINT}/events`);
+  proofEventSource.onmessage = (event) => {
+    try {
+      state.handoffRecord = JSON.parse(event.data);
+      render();
+    } catch (error) {
+      // Ignore malformed server events.
+    }
+  };
+}
+
+function connectVerificationFeed() {
+  if (verificationEventSource || typeof EventSource !== "function") {
+    return;
+  }
+
+  verificationEventSource = new EventSource(`${VERIFICATION_API_ENDPOINT}/events`);
+  verificationEventSource.onmessage = (event) => {
+    try {
+      applyVerificationRecord(JSON.parse(event.data));
+    } catch (error) {
+      // Ignore malformed server events.
+    }
+  };
+}
+
 function handleTargetFound(detail) {
   state.anchorMode = "image-target";
   state.provider = "8th Wall image target";
   state.targetName = detail.name || "image-target";
   state.targetLocked = true;
   state.trackingStatus = "Image target locked";
+  state.targetScreenPose = extractTargetPose(detail);
   recordEvent("image_found", detail);
   render();
 }
@@ -1333,6 +2010,7 @@ function handleTargetUpdated(detail) {
   state.targetName = detail.name || state.targetName;
   state.targetLocked = true;
   state.trackingStatus = "Image target tracking";
+  state.targetScreenPose = extractTargetPose(detail);
   recordEvent("image_updated", { name: detail.name, scale: detail.scale });
   render();
 }
@@ -1341,6 +2019,7 @@ function handleTargetLost(detail) {
   state.targetLocked = false;
   state.anchorMode = "unlocked";
   state.targetName = "waiting";
+  state.targetScreenPose = null;
   state.trackingStatus = "Image target lost";
   recordEvent("image_lost", detail || {});
   render();
@@ -1424,6 +2103,8 @@ function attachGlobalBridge() {
     targetFound: handleTargetFound,
     targetLost: handleTargetLost,
     getProofRecord: () => state.proofRecord,
+    getDashboardUrl,
+    dispatchProofRecord,
     resetSession: () => {
       state.sessionId = newSessionId();
       state.targetLocked = false;
@@ -1434,6 +2115,9 @@ function attachGlobalBridge() {
       state.afterCapture = null;
       state.instructionCompletedAt = null;
       state.proofRecord = null;
+      state.handoffRecord = null;
+      state.verificationRecord = null;
+      state.targetScreenPose = null;
       state.eventLog = [];
       state.trackingStatus = "Session reset";
       render();
@@ -1444,17 +2128,71 @@ function attachGlobalBridge() {
 function boot() {
   ensureOverlay();
   attachGlobalBridge();
-  recordEvent("overlay_booted");
-  paintDesktopPreviewPlaceholder();
+  recordEvent("overlay_booted", { role: state.appRole });
   render();
+
+  if (state.appRole === "dashboard") {
+    void loadLatestHandoff();
+    connectProofFeed();
+    window.addEventListener("storage", (event) => {
+      if (event.key !== PROOF_HANDOFF_STORAGE_KEY || !event.newValue) {
+        return;
+      }
+
+      try {
+        state.handoffRecord = JSON.parse(event.newValue);
+        render();
+      } catch (error) {
+        // Ignore malformed cross-tab handoffs.
+      }
+    });
+
+    const proofChannelInstance = getProofChannel();
+    if (proofChannelInstance && typeof proofChannelInstance.addEventListener === "function") {
+      proofChannelInstance.addEventListener("message", (event) => {
+        state.handoffRecord = event.data;
+        render();
+      });
+    } else if (proofChannelInstance) {
+      proofChannelInstance.onmessage = (event) => {
+        state.handoffRecord = event.data;
+        render();
+      };
+    }
+    return;
+  }
+
+  paintDesktopPreviewPlaceholder();
+  void loadLatestVerification();
+  connectVerificationFeed();
+
+  window.addEventListener("storage", (event) => {
+    if (event.key !== VERIFICATION_STORAGE_KEY || !event.newValue) {
+      return;
+    }
+
+    try {
+      applyVerificationRecord(JSON.parse(event.newValue));
+    } catch (error) {
+      // Ignore malformed cross-tab verification events.
+    }
+  });
+
+  const verificationChannelInstance = getVerificationChannel();
+  if (verificationChannelInstance && typeof verificationChannelInstance.addEventListener === "function") {
+    verificationChannelInstance.addEventListener("message", (event) => applyVerificationRecord(event.data));
+  } else if (verificationChannelInstance) {
+    verificationChannelInstance.onmessage = (event) => applyVerificationRecord(event.data);
+  }
 
   if (window.XR8) {
     installXR8Listeners();
-  } else {
-    window.addEventListener("xrloaded", installXR8Listeners, { once: true });
-    state.trackingStatus = "Waiting for xrloaded";
-    render();
+    return;
   }
+
+  window.addEventListener("xrloaded", installXR8Listeners, { once: true });
+  state.trackingStatus = "Waiting for xrloaded";
+  render();
 }
 
 boot();

@@ -29,6 +29,66 @@ const collectLanUrls = () => {
 
 const hostname = os.hostname()
 const localHostnames = [hostname, `${hostname}.local`]
+const handoffStore = {
+  latest: null,
+}
+const verificationStore = {
+  latest: null,
+}
+const proofClients = new Set()
+const verificationClients = new Set()
+
+const sendJson = (res, status, payload) => {
+  res.status(status)
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  res.setHeader('Cache-Control', 'no-store')
+  res.end(JSON.stringify(payload))
+}
+
+const readJsonBody = (req) =>
+  new Promise((resolve, reject) => {
+    let raw = ''
+    req.on('data', (chunk) => {
+      raw += chunk
+      if (raw.length > 2 * 1024 * 1024) {
+        reject(new Error('Request body too large'))
+      }
+    })
+    req.on('end', () => {
+      try {
+        resolve(raw ? JSON.parse(raw) : {})
+      } catch (error) {
+        reject(error)
+      }
+    })
+    req.on('error', reject)
+  })
+
+const attachSseClient = (req, res, clients, latest) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-store',
+    Connection: 'keep-alive',
+  })
+  res.write('\n')
+
+  if (latest) {
+    res.write(`data: ${JSON.stringify(latest)}\n\n`)
+  }
+
+  const client = {res}
+  clients.add(client)
+  req.on('close', () => {
+    clients.delete(client)
+  })
+}
+
+const broadcastSse = (clients, payload) => {
+  const message = `data: ${JSON.stringify(payload)}\n\n`
+  for (const client of clients) {
+    client.res.write(message)
+  }
+}
 
 const devServer = {
   ...config.devServer,
@@ -40,6 +100,45 @@ const devServer = {
   client: {
     ...config.devServer.client,
     webSocketURL: 'auto://0.0.0.0/ws',
+  },
+  setupMiddlewares: (middlewares, server) => {
+    server.app.get('/api/handoff/latest', (req, res) => {
+      sendJson(res, 200, handoffStore.latest)
+    })
+
+    server.app.post('/api/handoff', async (req, res) => {
+      try {
+        handoffStore.latest = await readJsonBody(req)
+        broadcastSse(proofClients, handoffStore.latest)
+        sendJson(res, 200, {ok: true})
+      } catch (error) {
+        sendJson(res, 400, {ok: false, error: error.message})
+      }
+    })
+
+    server.app.get('/api/handoff/events', (req, res) => {
+      attachSseClient(req, res, proofClients, handoffStore.latest)
+    })
+
+    server.app.get('/api/verification/latest', (req, res) => {
+      sendJson(res, 200, verificationStore.latest)
+    })
+
+    server.app.post('/api/verification', async (req, res) => {
+      try {
+        verificationStore.latest = await readJsonBody(req)
+        broadcastSse(verificationClients, verificationStore.latest)
+        sendJson(res, 200, {ok: true})
+      } catch (error) {
+        sendJson(res, 400, {ok: false, error: error.message})
+      }
+    })
+
+    server.app.get('/api/verification/events', (req, res) => {
+      attachSseClient(req, res, verificationClients, verificationStore.latest)
+    })
+
+    return middlewares
   },
 }
 
@@ -76,11 +175,13 @@ const printUrls = () => {
   console.log('')
   console.log(`Real Physical Gigs 8th Wall dev server running`)
   console.log(`  Local: ${protocol}://localhost:${port}/`)
+  console.log(`  Dashboard: ${protocol}://localhost:${port}/?role=dashboard`)
   for (const name of localHostnames) {
     console.log(`  Hostname: ${protocol}://${name}:${port}/`)
   }
   for (const address of lanUrls) {
     console.log(`  LAN: ${protocol}://${address}:${port}/`)
+    console.log(`  Dashboard: ${protocol}://${address}:${port}/?role=dashboard`)
   }
   console.log('')
   if (wantsHttps) {
