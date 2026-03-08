@@ -1,46 +1,19 @@
 import { NextResponse } from "next/server";
 import incomingTasksData from "../../data/incomingTasks.json";
-import { searchCandidatesForTask } from "../../lib/crustdataAdmin";
-import {
-  recommendTasksForCandidate,
-  type AdminCandidate,
-  type AdminTask,
-} from "../../lib/adminMatching";
+import workersData from "../../data/workers.json";
+import { rankCandidates, type AdminTask, type Worker } from "../../lib/adminMatching";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const tasks = incomingTasksData as AdminTask[];
-
-/**
- * Demo-mode mock candidate — used when Crustdata API is unavailable.
- * Represents a strong all-round Tokyo field operator so the recommend
- * logic fires realistically even without live data.
- */
-const DEMO_CANDIDATE: AdminCandidate = {
-  id: "demo-candidate-1",
-  name: "Yuki Tanaka",
-  title: "Field Operations Manager",
-  company: "Mobility Solutions KK",
-  location: "Shibuya, Tokyo, Japan",
-  headline: "Field operations & dispatch specialist with 6 years in Tokyo mobility",
-  distanceLabel: "same zone",
-  profileConfidence: "high",
-  roleFitLabel: "role fit: strong navigation match",
-  reasons: ["role fit: strong navigation match", "location fit: same zone", "profile confidence: high"],
-  score: 82,
-  linkedinUrl: undefined,
-};
+const workers = workersData as Worker[];
 
 /**
  * GET /api/recommend
  *
- * Picks the highest-priority task, fetches its top Crustdata candidate,
- * then recommends tasks for that candidate profile.
- * Falls back to a demo candidate if Crustdata is unavailable.
- *
- * Returns:
- *   { candidate, recommendations: Array<{ task, score, reason }> }
+ * Picks the highest-priority task, ranks workers, and returns the top
+ * candidate with task recommendations.
  */
 export async function GET() {
   const pivotTask = tasks[0];
@@ -48,29 +21,28 @@ export async function GET() {
     return NextResponse.json({ recommendations: [] });
   }
 
-  // Try live Crustdata; fall back to demo candidate if anything fails
-  let topCandidate: AdminCandidate = DEMO_CANDIDATE;
-  let isDemo = true;
+  const ranked = rankCandidates(pivotTask, workers);
+  const topRanked = ranked[0];
 
-  try {
-    const candidates = await searchCandidatesForTask(pivotTask);
-    if (candidates[0]) {
-      topCandidate = candidates[0];
-      isDemo = false;
-    }
-  } catch {
-    // swallow — use demo fallback
+  if (!topRanked) {
+    return NextResponse.json({ recommendations: [] });
   }
 
-  const recommendations = recommendTasksForCandidate(topCandidate, tasks, 3);
+  const recommendations = tasks.slice(0, 3).map((task) => {
+    const taskRanked = rankCandidates(task, [topRanked.worker]);
+    const match = taskRanked[0];
+    return {
+      task: { id: task.id, title: task.title, type: task.type, reward: task.reward },
+      score: match?.score ?? 0,
+      reason: match?.reasons.join(", ") ?? "",
+    };
+  });
 
   return NextResponse.json({
     candidate: {
-      name: topCandidate.name,
-      title: topCandidate.title,
-      company: topCandidate.company,
-      score: topCandidate.score,
-      isDemo,
+      name: topRanked.worker.name,
+      score: topRanked.score,
+      isDemo: true,
     },
     recommendations,
   });

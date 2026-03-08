@@ -192,7 +192,7 @@ export function HeroMap() {
   const [conversation, setConversation] = useState<AcceptanceConversationMessage[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState<AcceptanceLanguage>("ja");
   const [isVoiceSupported, setIsVoiceSupported] = useState(false);
-  const [isSpeechOutputEnabled, setIsSpeechOutputEnabled] = useState(false);
+  const [isSpeechOutputEnabled, setIsSpeechOutputEnabled] = useState(true);
   const [textReply, setTextReply] = useState("");
   const [transcriptPreview, setTranscriptPreview] = useState("");
   const [voiceError, setVoiceError] = useState<string | null>(null);
@@ -314,7 +314,10 @@ export function HeroMap() {
         },
       ]);
       setCurrentStep(payload.nextStep);
-      setAcceptanceState(getAcceptanceStateFromReply(payload.statusHint));
+
+      // Auto-speak briefing and start listening
+      await speakAssistantText(payload.assistantText, getAcceptanceStateFromReply(payload.statusHint));
+      startListening();
     }
 
     loadBriefing().catch((error: unknown) => {
