@@ -661,7 +661,7 @@ function ensureOverlay() {
       align-items: center;
       justify-content: center;
       gap: 8px;
-      width: min(64vw, 320px);
+      width: min(56vw, 280px);
       pointer-events: none;
     }
 
@@ -681,7 +681,8 @@ function ensureOverlay() {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      max-width: min(74vw, 360px);
+      width: 100%;
+      max-width: min(56vw, 280px);
       min-height: 40px;
       padding: 8px 14px;
       border-radius: 18px;
@@ -1339,9 +1340,10 @@ function isImageTargetActive() {
 
 function getGuidancePose() {
   const pose = state.targetScreenPose || {x: 0.5, y: 0.58, scale: 0.32};
+  const lateralOffset = Math.max(0.08, (pose.scale ?? 0.32) * 0.34);
   return {
-    left: clamp(pose.x ?? 0.5, 0.22, 0.78),
-    top: clamp((pose.y ?? 0.58) - Math.max(0.07, (pose.scale ?? 0.32) * 0.18), 0.24, 0.62),
+    left: clamp((pose.x ?? 0.5) - lateralOffset, 0.2, 0.68),
+    top: clamp((pose.y ?? 0.58) - Math.max(0.08, (pose.scale ?? 0.32) * 0.2), 0.24, 0.62),
   };
 }
 
