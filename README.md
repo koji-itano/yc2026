@@ -47,6 +47,51 @@ pnpm install
 pnpm dev
 ```
 
+## Sponsor Tool Integration
+
+We built Yaorozu God OS by deeply integrating hackathon sponsor tools into every layer of the product:
+
+### CrustData — Operator Matching Engine
+
+CrustData's person search API powers the core of our dispatch system. When a quest is generated, we query CrustData to find the best-matched field operators in Tokyo based on job function, location, and profile confidence. The admin console (`/admin`) uses CrustData to rank and recommend candidates for each incoming task.
+
+- **Files**: `app/lib/crustdataAdmin.ts`, `app/api/admin/candidates/route.ts`
+- **Usage**: Real-time person search → profile scoring → candidate ranking
+- **Impact**: Without CrustData, operator matching would be limited to static mock data. CrustData gives us access to real professional profiles for realistic dispatching.
+
+### Shisa AI — Voice Acceptance & TTS
+
+Shisa AI's chat completion API (`shisa-v2.1-llama3.3-70b`) drives our hands-free voice acceptance flow. When a worker taps "Accept with voice", Shisa generates a natural-language briefing in Japanese or English, guides the worker through availability/ETA/safety checks, and confirms acceptance — all as a spoken conversation. Shisa's TTS endpoint converts each AI reply into audio so the worker can operate completely hands-free.
+
+- **Files**: `app/lib/voiceAcceptance.ts`, `app/api/voice/acceptance/route.ts`, `app/api/voice/tts/route.ts`
+- **Usage**: LLM chat completion → structured acceptance flow → TTS audio playback → speech recognition loop
+- **Impact**: Shisa enables bilingual (JA/EN) voice-first task acceptance — critical for field workers whose hands are occupied.
+
+### Blaxel — Autonomous Shrine Agent
+
+The Blaxel agent (`agent/blaxel_agent.ts`) acts as the "AI soul" of a physical asset (Yaoyorozu Shrine). It runs autonomously in a Blaxel sandbox, monitoring 6 simulated camera zones. When it detects an anomaly (fallen branches, vandalism, crowding), it auto-generates a quest and pushes it to our API. The company dashboard (`/company`) shows live agent activity.
+
+- **Files**: `agent/blaxel_agent.ts`, `app/api/quests/route.ts`, `app/company/page.tsx`
+- **Usage**: Persistent agent process → anomaly detection → auto quest dispatch → live dashboard
+- **Impact**: Blaxel turns our product from a passive task board into an autonomous system where physical assets proactively request human help.
+
+### 8th Wall — AR Guidance (Experimental)
+
+8th Wall's open-source WebAR SDK is integrated for on-site AR guidance. Workers can point their phone camera at a target and receive overlay instructions without installing an app.
+
+- **Files**: `8thwall/`
+- **Usage**: Browser-based AR overlay for field task guidance
+- **Impact**: Enables visual step-by-step guidance at the job site, bridging the gap between AI instructions and physical execution.
+
+### Summary
+
+| Sponsor | Where Used | Role |
+|---------|-----------|------|
+| **CrustData** | Admin dispatch console, `/api/admin/candidates` | Real-time operator matching from professional profiles |
+| **Shisa AI** | Voice acceptance flow, `/api/voice/acceptance`, `/api/voice/tts` | Bilingual LLM conversation + text-to-speech |
+| **Blaxel** | Shrine monitoring agent, `/company` dashboard | Autonomous quest generation from physical asset |
+| **8th Wall** | AR camera overlay | On-site visual guidance for workers |
+
 ## API
 
 ### `GET /api/quests`
