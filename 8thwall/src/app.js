@@ -24,6 +24,8 @@ const state = {
   desktopWebcamEnabled: false,
   desktopStream: null,
   desktopPreviewFrame: null,
+  liveCameraEnabled: false,
+  liveCameraStream: null,
 };
 
 const DOM = {};
@@ -66,6 +68,8 @@ function ensureOverlay() {
     html, body {
       margin: 0;
       min-height: 100%;
+      height: 100%;
+      overflow: hidden;
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
       background: #000;
       color: var(--rpg-text);
@@ -78,13 +82,28 @@ function ensureOverlay() {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      gap: 12px;
       padding: 16px;
       box-sizing: border-box;
       z-index: 9999;
+      height: 100dvh;
+      overflow: hidden;
     }
 
     #rpg-overlay * {
       box-sizing: border-box;
+    }
+
+    #rpg-live-camera {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      background: #000;
+      z-index: 1;
+      display: none;
+      pointer-events: none;
     }
 
     .rpg-topbar,
@@ -174,6 +193,7 @@ function ensureOverlay() {
       display: grid;
       gap: 12px;
       align-content: end;
+      min-height: 0;
     }
 
     .rpg-card,
@@ -304,17 +324,209 @@ function ensureOverlay() {
 
     @media (max-width: 680px) {
       #rpg-overlay {
-        padding: 12px;
+        gap: 8px;
+        padding:
+          max(10px, env(safe-area-inset-top))
+          10px
+          max(10px, env(safe-area-inset-bottom))
+          10px;
       }
 
       .rpg-title {
-        font-size: 21px;
+        font-size: 20px;
       }
 
-      .rpg-meta,
-      .rpg-actions,
+      .rpg-subtitle {
+        margin-top: 6px;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .rpg-chip-row {
+        gap: 6px;
+        margin-top: 10px;
+      }
+
+      .rpg-chip {
+        min-height: 28px;
+        padding: 0 10px;
+        font-size: 11px;
+      }
+
+      .rpg-main {
+        gap: 8px;
+        grid-template-rows: minmax(0, 1fr) minmax(132px, auto);
+      }
+
+      .rpg-topbar,
+      .rpg-card,
+      .rpg-proof {
+        border-radius: 16px;
+      }
+
+      .rpg-topbar {
+        padding: 12px;
+      }
+
+      .rpg-card,
+      .rpg-proof {
+        padding: 12px;
+      }
+
+      .rpg-card h2,
+      .rpg-proof h2 {
+        margin-bottom: 8px;
+        font-size: 16px;
+      }
+
+      .rpg-meta {
+        gap: 8px 12px;
+      }
+
+      .rpg-meta dt {
+        font-size: 10px;
+      }
+
+      .rpg-meta dd {
+        font-size: 13px;
+      }
+
+      .rpg-note {
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .rpg-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .rpg-actions button {
+        min-height: 42px;
+        padding: 10px 10px;
+        font-size: 13px;
+        border-radius: 12px;
+      }
+
       .rpg-preview-row {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .rpg-preview {
+        min-height: 74px;
+      }
+
+      .rpg-preview-label {
+        padding: 6px 8px;
+        font-size: 11px;
+      }
+
+      .rpg-preview-empty {
+        padding: 14px 8px;
+        font-size: 11px;
+      }
+
+      .rpg-proof {
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        min-height: 0;
+      }
+
+      .rpg-proof pre {
+        max-height: 96px;
+        font-size: 11px;
+        line-height: 1.3;
+      }
+
+      .rpg-log {
+        margin-top: 8px;
+        max-height: 56px;
+        font-size: 11px;
+      }
+    }
+
+    @media (max-width: 460px) and (max-height: 980px) {
+      #rpg-overlay {
+        gap: 6px;
+        padding:
+          max(8px, env(safe-area-inset-top))
+          8px
+          max(8px, env(safe-area-inset-bottom))
+          8px;
+      }
+
+      .rpg-topbar {
+        padding: 10px;
+      }
+
+      .rpg-eyebrow {
+        margin-bottom: 4px;
+        font-size: 10px;
+      }
+
+      .rpg-title {
+        font-size: 18px;
+      }
+
+      .rpg-subtitle {
+        font-size: 11px;
+        line-height: 1.25;
+      }
+
+      .rpg-chip-row {
+        margin-top: 8px;
+      }
+
+      .rpg-chip {
+        min-height: 26px;
+        padding: 0 8px;
+        font-size: 10px;
+      }
+
+      .rpg-card,
+      .rpg-proof {
+        padding: 10px;
+      }
+
+      .rpg-card h2,
+      .rpg-proof h2 {
+        font-size: 15px;
+      }
+
+      .rpg-meta dd {
+        font-size: 12px;
+      }
+
+      .rpg-note {
+        font-size: 11px;
+      }
+
+      .rpg-actions {
+        gap: 6px;
+        margin-top: 8px;
+      }
+
+      .rpg-actions button {
+        min-height: 38px;
+        padding: 8px;
+        font-size: 12px;
+      }
+
+      .rpg-preview {
+        min-height: 64px;
+      }
+
+      .rpg-proof pre {
+        max-height: 72px;
+        font-size: 10px;
+      }
+
+      .rpg-log {
+        max-height: 40px;
+        font-size: 10px;
       }
     }
   `;
@@ -412,6 +624,7 @@ function ensureOverlay() {
   DOM.afterSlot = document.getElementById("rpg-after-slot");
   DOM.proofOutput = document.getElementById("rpg-proof-output");
   DOM.log = document.getElementById("rpg-log");
+  DOM.liveCamera = document.getElementById("rpg-live-camera");
   DOM.desktopWebcam = document.getElementById("rpg-desktop-webcam");
   DOM.desktopPreview = document.getElementById("rpg-desktop-preview");
 
@@ -437,8 +650,10 @@ function render() {
   DOM.proofOutput.textContent = state.proofRecord
     ? JSON.stringify(state.proofRecord, null, 2)
     : "Capture before/after evidence to generate a proof package.";
-  DOM.webcamButton.disabled = state.desktopWebcamEnabled;
-  DOM.webcamButton.style.display = isDesktopBrowser() ? "inline-flex" : "none";
+  DOM.webcamButton.disabled = isDesktopBrowser() ? state.desktopWebcamEnabled : state.liveCameraEnabled;
+  DOM.webcamButton.textContent = isDesktopBrowser() ? "Enable desktop webcam" : "Enable live camera";
+  DOM.webcamButton.style.display = "inline-flex";
+  DOM.liveCamera.style.display = !isDesktopBrowser() && state.liveCameraEnabled ? "block" : "none";
   DOM.desktopPreview.style.display = isDesktopBrowser() ? "block" : "none";
   DOM.beforeButton.disabled = !state.targetLocked;
   DOM.doneButton.disabled = !state.beforeCapture;
@@ -454,6 +669,9 @@ function buildNote() {
   if (!state.targetLocked) {
     if (isDesktopBrowser() && !state.desktopWebcamEnabled) {
       return "On Mac desktop, click Enable desktop webcam to test the 8th Wall overlay with the browser camera API.";
+    }
+    if (!isDesktopBrowser() && !state.liveCameraEnabled) {
+      return "On iPhone, tap Enable live camera first so the canister stays visible while you use the manual anchor flow.";
     }
     if (state.imageTargetsConfigured.length) {
       return `Scanning for image targets: ${state.imageTargetsConfigured.join(", ")}. Use manual lock if tracking is unavailable.`;
@@ -665,6 +883,11 @@ function renderDesktopPreview() {
 }
 
 async function enableDesktopWebcam() {
+  if (!isDesktopBrowser()) {
+    await enableLiveCamera()
+    return
+  }
+
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     state.cameraStatus = "Web camera API unavailable";
     recordEvent("desktop_webcam_failed", { reason: "media_devices_unavailable" });
@@ -702,9 +925,41 @@ async function enableDesktopWebcam() {
   }
 }
 
+async function enableLiveCamera() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    state.cameraStatus = "Web camera API unavailable";
+    recordEvent("live_camera_failed", { reason: "media_devices_unavailable" });
+    render();
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: {
+          ideal: "environment",
+        },
+      },
+      audio: false,
+    });
+
+    state.liveCameraStream = stream;
+    state.liveCameraEnabled = true;
+    state.cameraStatus = "Browser camera live";
+    DOM.liveCamera.srcObject = stream;
+    await DOM.liveCamera.play();
+    recordEvent("live_camera_enabled");
+    render();
+  } catch (error) {
+    state.cameraStatus = "Browser camera unavailable";
+    recordEvent("live_camera_failed", { reason: error.message });
+    render();
+  }
+}
+
 function captureEvidence(kind) {
   const canvas = findCaptureCanvas();
-  if (!canvas && !state.desktopWebcamEnabled) {
+  if (!canvas && !state.desktopWebcamEnabled && !state.liveCameraEnabled) {
     state.trackingStatus = "No render canvas available for capture";
     recordEvent("capture_failed", { kind, reason: "missing_canvas" });
     render();
@@ -719,7 +974,9 @@ function captureEvidence(kind) {
           width: canvas.width,
           height: canvas.height,
         }
-      : makeCaptureFromVideo(DOM.desktopWebcam);
+      : state.liveCameraEnabled
+        ? makeCaptureFromVideo(DOM.liveCamera)
+        : makeCaptureFromVideo(DOM.desktopWebcam);
     if (kind === "before") {
       state.beforeCapture = capture;
     } else {
