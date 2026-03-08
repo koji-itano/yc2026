@@ -1,4 +1,4 @@
-import itoenBottleTarget from '../image-targets/itoen-bottle.json'
+import itoenBottleTarget from '../image-targets/itoen-bottle-168h.json'
 import canisterCapTarget from '../image-targets/canister-cap.json'
 
 const state = {
