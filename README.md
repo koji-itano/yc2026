@@ -1,4 +1,4 @@
-# Industriate Guidance OS — Hackathon Repository
+# Guidance OS — Hackathon Repository
 
 **c0mpiled-7/sanfransokyo Hackathon | March 8, 2026**
 Toranomon Hills Mori Tower, Tokyo

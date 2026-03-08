@@ -89,7 +89,7 @@ Needed: APIs abstracting training complexity, databases managing terabyte-scale 
 
 ## 10. AI Guidance for Physical Work — by David Lieb
 
-**This is the RFS most relevant to Industriate Guidance OS.**
+**This is the RFS most relevant to our project (Guidance OS).**
 
 > "You know that scene in The Matrix, where Neo plugs a cable into the back of his head and wakes up a while later and says 'I know Kung Fu'? Physical work is about to get something similar -- not through brain implants, but through real-time AI guidance.
 >
@@ -103,7 +103,7 @@ Needed: APIs abstracting training complexity, databases managing terabyte-scale 
 >
 > If you're interested in giving physical workers the same type of AI superpowers that Claude Code gives you, we'd love to see you apply."
 
-### Key Takeaways for Industriate
+### Key Takeaways for Our Project
 - **Author**: David Lieb (YC Partner)
 - **Exact verticals mentioned**: field services, manufacturing, healthcare, HVAC repair, nursing
 - **Hardware**: phones, AirPods, Smart Glasses
