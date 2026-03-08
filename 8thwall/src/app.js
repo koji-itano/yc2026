@@ -89,6 +89,26 @@ function getRequestedTargetProfile() {
   return isDesktopBrowser() ? "all" : "itoen-bottle"
 }
 
+function formatTargetName(name) {
+  if (!name || name === "waiting") {
+    return "waiting"
+  }
+  if (name === "manual-fallback") {
+    return "manual fallback"
+  }
+
+  const profiles = getTargetProfiles()
+  const byTargetName = Object.values(profiles).find((profile) =>
+    profile.targets.some((target) => target.name === name)
+  )
+
+  if (byTargetName) {
+    return byTargetName.label
+  }
+
+  return name
+}
+
 function ensureOverlay() {
   const style = document.createElement("style");
   style.textContent = `
@@ -877,13 +897,13 @@ function render() {
   DOM.targetFoundChip.textContent = `Image target: ${imageTargetActive ? "found" : "waiting"}`;
   DOM.statusChip.textContent = `Status: ${state.trackingStatus}`;
   DOM.expectedTargetChip.textContent = `Expected: ${state.activeTargetLabel}`;
-  DOM.targetChip.textContent = `Target: ${state.targetName}`;
+  DOM.targetChip.textContent = `Target: ${formatTargetName(state.targetName)}`;
   DOM.cameraChip.textContent = `Camera: ${state.cameraStatus}`;
   DOM.detectionGuide.style.display = showDetectionGuide ? "flex" : "none";
   DOM.detectionTitle.textContent = getTargetProfiles()[state.activeTargetProfile].waitingTitle;
   DOM.detectionBody.textContent = getTargetProfiles()[state.activeTargetProfile].waitingBody;
   DOM.guidance.style.display = imageTargetActive && xrCameraReady ? "flex" : "none";
-  DOM.guidanceLabel.textContent = `Target found: ${state.targetName}. Turn clockwise to secure the cap.`;
+  DOM.guidanceLabel.textContent = `Target found: ${formatTargetName(state.targetName)}. Turn clockwise to secure the cap.`;
   DOM.focusButton.style.display = cameraActive ? "inline-flex" : "none";
   DOM.focusButton.textContent = state.focusMode ? "Show controls" : "Hide controls";
   DOM.taskId.textContent = state.taskId;
