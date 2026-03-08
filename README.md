@@ -1,15 +1,14 @@
-# Real Physical Gigs (R.P.G.) — ハッカソンリポジトリ / Hackathon Repository
+# Guidance OS — ハッカソンリポジトリ / Hackathon Repository
 
 **c0mpiled-7/sanfransokyo ハッカソン | 2026年3月8日**
 虎ノ門ヒルズ森タワー、東京
 
-> "We're building Real Physical Gigs: a quest-like platform for AI-guided work in the real world."
+> "We're building the execution layer for AI-managed physical work."
 >
-> AIが現実世界の仕事をクエストのように依頼し、人間がガイダンスを受けて実行するプラットフォームを構築する。
+> AI管理型フィジカルワークの実行レイヤーを構築する。
 
 **チーム / Team:** 5 members
 **テーマ / Theme:** #7 — AI Guidance for Physical Work (YC RFS Spring 2026)
-**App Name:** Real Physical Gigs (`R.P.G.`)
 
 ---
 
@@ -32,9 +31,8 @@ yc2026/
 │   └── tools_others.md                    #   Unbound, VoiceOS, Shisa AI
 │
 ├── strategy/                              # 戦略・企画 / Our planning docs
-│   ├── PRD_v1.0_GuidanceOS.md             #   初期PRD / Initial PRD
+│   ├── PRD_v1.0_GuidanceOS.md             #   PRD たたき台 / Draft PRD
 │   ├── PRD_v1.3_GovDispatch_AR.md         #   Gov / civic task wedge
-│   ├── SYMPHONY_IMPORT_PLAN_v1.0.md       #   Symphony成果物の取り込み計画
 │   ├── tabletop_canister_demo_runbook_v1.0.md
 │   └── AR_Guidance_v1.1_Canister.md
 │
@@ -48,7 +46,12 @@ yc2026/
 │   ├── server.js                          #   Local Node server
 │   └── validate*.js                       #   Validation scripts
 │
-└── src/                                   # ソースコード / Prototype code
+├── 8thwall/                               # 8th Wall 実機デモ / 8th Wall iPhone demo
+│   ├── src/                               #   World-camera AR flow
+│   ├── image-targets/                     #   Generated target payloads
+│   └── README.md                          #   iPhone/HTTPS launch notes
+│
+└── src/                                   # ソースコード / Application source code
     └── ar-canister-demo/                  #   AR worker + dashboard demo
 ```
 
