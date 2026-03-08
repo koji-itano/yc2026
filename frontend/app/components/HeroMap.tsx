@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
+import incomingTasksData from "../data/incomingTasks.json";
 
 type QuestMarker = {
   accent: string;
@@ -86,53 +87,7 @@ const questMarkers = [
   },
 ] satisfies QuestMarker[];
 
-const incomingTasks: IncomingTask[] = [
-  {
-    eta: "ETA 02:10",
-    id: "task-nav-1",
-    lane: "Ingress lane A3",
-    markerLabel: "NAV",
-    reward: "+24 route XP",
-    title: "Station detour verification",
-    type: "Navigation",
-  },
-  {
-    eta: "ETA 01:45",
-    id: "task-gig-1",
-    lane: "Dispatch lane C1",
-    markerLabel: "GIG",
-    reward: "+31 dispatch XP",
-    title: "Rapid pickup handoff",
-    type: "Gig Work",
-  },
-  {
-    eta: "ETA 03:30",
-    id: "task-tour-1",
-    lane: "Guide lane B2",
-    markerLabel: "TOUR",
-    reward: "+18 local guide XP",
-    title: "Luxury corridor availability",
-    type: "Tourism",
-  },
-  {
-    eta: "ETA 02:55",
-    id: "task-insp-1",
-    lane: "Ops lane D4",
-    markerLabel: "INSP",
-    reward: "+27 inspection XP",
-    title: "Queue density scan",
-    type: "Inspection",
-  },
-  {
-    eta: "ETA 04:05",
-    id: "task-learn-1",
-    lane: "Model lane E2",
-    markerLabel: "LEARN",
-    reward: "+16 model training XP",
-    title: "Wayfinding edge-case capture",
-    type: "Learning",
-  },
-];
+const incomingTasks = incomingTasksData as IncomingTask[];
 
 const initialVisibleMarkerLabels: QuestMarker["label"][] = [incomingTasks[0].markerLabel];
 
