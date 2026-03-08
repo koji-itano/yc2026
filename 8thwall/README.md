@@ -9,6 +9,22 @@ Run `npm install` in this folder.
 ### Development
 Run `npm run serve` to run the development server.
 
+### iPhone HTTPS development
+
+For camera-based testing on iPhone over the same Wi-Fi:
+
+1. Run `npm install`.
+2. Generate local certificates with `npm run cert:dev`.
+3. Start the LAN HTTPS server with `npm run serve:iphone`.
+4. Open one of the printed `https://<LAN-IP>:8443/` URLs on the iPhone.
+
+Notes:
+
+- `npm run cert:dev` prefers `mkcert` when available and falls back to a self-signed OpenSSL cert.
+- Trusted local HTTPS works best with `mkcert`. If Safari blocks camera access, install the local CA on the phone or use a public HTTPS tunnel.
+- The local mkcert root CA is typically at `~/Library/Application Support/mkcert/rootCA.pem`. AirDrop it to the iPhone, install the profile, then enable full trust in `Settings > General > About > Certificate Trust Settings`.
+- Generated certificates are stored in `certs/` and are ignored by git.
+
 This export now includes a WIL-9 tabletop worker overlay in `src/app.js`.
 It adds:
 
