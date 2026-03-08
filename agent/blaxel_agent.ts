@@ -76,14 +76,14 @@ type Quest = {
 };
 
 function evaluate(cam: CameraData, zone: Zone): Quest | null {
-  const loc = `やおよろず神社 ${zone.name}`;
+  const loc = `Yaoyorozu Shrine — ${zone.nameEn}`;
   const area = "Yaoyorozu Shrine";
 
   // Priority 1: Medical / Safety
   if (cam.hasFallenPerson) {
     return {
-      title: `【緊急】転倒者発生 — ${zone.name}`,
-      summary: `${zone.camera}で${zone.name}に転倒している人物を検知しました。安全確認と応急対応をお願いします。`,
+      title: `[URGENT] Person Down — ${zone.nameEn}`,
+      summary: `${zone.camera} detected a fallen individual at ${zone.nameEn}. Please confirm safety and provide first aid if needed.`,
       location: loc, locationArea: area,
       type: "Alert", priority: "high",
       requiredSkill: "First Aid",
@@ -96,8 +96,8 @@ function evaluate(cam: CameraData, zone: Zone): Quest | null {
   // Priority 2: Off-limits / Security
   if (cam.isOffLimitsEntry) {
     return {
-      title: `立入禁止区域への侵入 — ${zone.name}`,
-      summary: `${zone.camera}が${zone.name}の禁止エリアへの侵入を検知。丁寧に案内してください。`,
+      title: `Restricted Area Intrusion — ${zone.nameEn}`,
+      summary: `${zone.camera} detected unauthorized entry into a restricted area at ${zone.nameEn}. Please guide the individual out politely.`,
       location: loc, locationArea: area,
       type: "Security", priority: "high",
       requiredSkill: "Navigation",
@@ -110,8 +110,8 @@ function evaluate(cam: CameraData, zone: Zone): Quest | null {
   // Priority 3: Crowd control
   if (cam.crowdDensity > 80) {
     return {
-      title: `参拝混雑対応 — ${zone.name}`,
-      summary: `${zone.camera}で${zone.name}の混雑度${cam.crowdDensity}%を検知。スムーズな参拝誘導をお願いします。`,
+      title: `Crowd Overload — ${zone.nameEn}`,
+      summary: `${zone.camera} detected ${cam.crowdDensity}% crowd density at ${zone.nameEn}. Please help direct visitors for smooth flow.`,
       location: loc, locationArea: area,
       type: "Navigation", priority: "high",
       requiredSkill: "Navigation",
@@ -124,8 +124,8 @@ function evaluate(cam: CameraData, zone: Zone): Quest | null {
   // Priority 4: Lost tourist
   if (cam.hasLostTourist) {
     return {
-      title: `迷子の観光客サポート — ${zone.name}`,
-      summary: `${zone.camera}が${zone.name}付近で地図を見て困惑している観光客を検知。案内をお願いします。`,
+      title: `Lost Visitor Assist — ${zone.nameEn}`,
+      summary: `${zone.camera} detected a confused tourist near ${zone.nameEn} holding a map. Please approach and assist with directions.`,
       location: loc, locationArea: area,
       type: "Tourism", priority: "medium",
       requiredSkill: "Tourism",
@@ -138,8 +138,8 @@ function evaluate(cam: CameraData, zone: Zone): Quest | null {
   // Priority 5: Water fountain empty
   if (cam.isWaterFountainEmpty && zone.id === "temizuya") {
     return {
-      title: `手水舎の水切れ確認`,
-      summary: `${zone.camera}で手水舎の水量低下を検知。補充または管理者への報告をお願いします。`,
+      title: `Purification Fountain — Water Low`,
+      summary: `${zone.camera} detected low water level at the purification font. Please refill or report to site management.`,
       location: loc, locationArea: area,
       type: "Inspection", priority: "medium",
       requiredSkill: "Inspection",
@@ -152,8 +152,8 @@ function evaluate(cam: CameraData, zone: Zone): Quest | null {
   // Priority 6: Littering
   if (cam.hasLittering) {
     return {
-      title: `境内清掃 — ${zone.name}`,
-      summary: `${zone.camera}が${zone.name}にゴミの放置を検知。境内の美観維持のため清掃をお願いします。`,
+      title: `Grounds Cleanup — ${zone.nameEn}`,
+      summary: `${zone.camera} detected littering at ${zone.nameEn}. Please collect and dispose of waste to maintain site cleanliness.`,
       location: loc, locationArea: area,
       type: "Gig Work", priority: "low",
       requiredSkill: "Cleaning",
@@ -166,8 +166,8 @@ function evaluate(cam: CameraData, zone: Zone): Quest | null {
   // Priority 7: Photo spot congestion
   if (cam.photoShootCongestion > 75 && zone.id === "torii") {
     return {
-      title: `鳥居フォトスポット整理`,
-      summary: `${zone.camera}で鳥居前の撮影待ち列が混雑（${cam.photoShootCongestion}%）を検知。順番整理をお願いします。`,
+      title: `Torii Gate Photo Queue Backup`,
+      summary: `${zone.camera} detected photo queue congestion at the Torii Gate (${cam.photoShootCongestion}%). Please help manage visitor order.`,
       location: loc, locationArea: area,
       type: "Navigation", priority: "low",
       requiredSkill: "Navigation",
@@ -197,7 +197,7 @@ async function pushQuest(quest: Quest): Promise<void> {
 
 // ── Main loop ────────────────────────────────────────────────────────────────
 async function main() {
-  console.log("⛩  やおよろず神社 監視エージェント 起動");
+  console.log("⛩  Yaoyorozu Shrine — Monitoring Agent Started");
   console.log(`   Agent: ${AGENT_ID}`);
   console.log(`   Target: ${QUEST_API_URL}/api/quests`);
   console.log(`   Monitoring ${ZONES.length} camera zones\n`);
@@ -208,7 +208,7 @@ async function main() {
     const zone = ZONES[Math.floor(Math.random() * ZONES.length)];
     const now = new Date().toTimeString().slice(0, 8);
 
-    console.log(`[${now}] Cycle ${cycle} — ${zone.camera} (${zone.name})`);
+    console.log(`[${now}] Cycle ${cycle} — ${zone.camera} (${zone.nameEn})`);
 
     const cam = readCameras(zone);
     console.log(
@@ -221,7 +221,7 @@ async function main() {
     if (quest) {
       await pushQuest(quest);
     } else {
-      console.log("  ✓ 異常なし — 境内は平常です");
+      console.log("  ✓ All clear — no action required");
     }
 
     console.log();

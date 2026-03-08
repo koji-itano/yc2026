@@ -1,92 +1,92 @@
 [
   {
-    "eta": "ETA 02:10",
-    "id": "task-nav-1",
-    "lane": "Ingress lane A3",
-    "location": "Shibuya Station",
-    "locationArea": "Shibuya",
-    "markerLabel": "NAV",
+    "eta": "ETA 00:30",
+    "id": "task-shrine-monitor-1",
+    "lane": "Camera lane A1",
+    "location": "Yaoyorozu Shrine — Main Hall",
+    "locationArea": "Yaoyorozu Shrine",
+    "markerLabel": "MON",
     "priority": "high",
-    "requiredSkill": "Navigation",
-    "reward": "+24 route XP",
+    "requiredSkill": "Monitoring",
+    "reward": "+30 security XP",
     "searchProfile": {
       "functions": ["Operations"],
-      "titleKeywords": ["operations manager", "field support", "mobility", "transport", "community manager"]
+      "titleKeywords": ["security", "monitoring", "surveillance", "field operations", "camera operator"]
     },
-    "summary": "Verify a pedestrian detour and capture the fastest accessible path for incoming riders.",
-    "title": "Station detour verification",
-    "type": "Navigation"
+    "summary": "Suspicious shadow detected on the main hall camera feed. Please inspect the site and file a visual report.",
+    "title": "Main Hall Camera Inspection",
+    "type": "Monitoring"
   },
   {
-    "eta": "ETA 01:45",
-    "id": "task-gig-1",
-    "lane": "Dispatch lane C1",
-    "location": "Shinjuku Grid",
-    "locationArea": "Shinjuku",
-    "markerLabel": "GIG",
+    "eta": "ETA 01:00",
+    "id": "task-shrine-alert-1",
+    "lane": "Alert lane B2",
+    "location": "Yaoyorozu Shrine — Approach Gate",
+    "locationArea": "Yaoyorozu Shrine",
+    "markerLabel": "ALT",
     "priority": "high",
-    "requiredSkill": "Dispatch",
-    "reward": "+31 dispatch XP",
+    "requiredSkill": "Security",
+    "reward": "+35 alert XP",
     "searchProfile": {
       "functions": ["Operations"],
-      "titleKeywords": ["dispatch", "logistics", "delivery", "operations manager", "field operations"]
+      "titleKeywords": ["security guard", "patrol", "incident response", "field support", "safety officer"]
     },
-    "summary": "Complete a fast physical pickup and confirm handoff readiness for an AI-routed delivery chain.",
-    "title": "Rapid pickup handoff",
-    "type": "Gig Work"
+    "summary": "Suspicious individual reported near the approach gate. Patrol the area and assess the situation.",
+    "title": "Approach Gate Suspicious Person",
+    "type": "Alert"
   },
   {
-    "eta": "ETA 03:30",
-    "id": "task-tour-1",
-    "lane": "Guide lane B2",
-    "location": "Ginza Corridor",
-    "locationArea": "Ginza",
-    "markerLabel": "TOUR",
-    "priority": "medium",
-    "requiredSkill": "Tourism",
-    "reward": "+18 local guide XP",
-    "searchProfile": {
-      "functions": ["Support"],
-      "titleKeywords": ["concierge", "hospitality", "guest experience", "tour coordinator", "community manager"]
-    },
-    "summary": "Scout a premium shopping route and confirm which storefronts are still open for a live concierge flow.",
-    "title": "Luxury corridor availability",
-    "type": "Tourism"
-  },
-  {
-    "eta": "ETA 02:55",
-    "id": "task-insp-1",
-    "lane": "Ops lane D4",
-    "location": "Tokyo Station East",
-    "locationArea": "Marunouchi",
+    "eta": "ETA 02:15",
+    "id": "task-shrine-insp-1",
+    "lane": "Ops lane C3",
+    "location": "Yaoyorozu Shrine — Office",
+    "locationArea": "Yaoyorozu Shrine",
     "markerLabel": "INSP",
     "priority": "medium",
     "requiredSkill": "Inspection",
-    "reward": "+27 inspection XP",
+    "reward": "+22 inspection XP",
     "searchProfile": {
       "functions": ["Operations"],
-      "titleKeywords": ["inspection", "quality assurance", "field operations", "retail operations", "site manager"]
+      "titleKeywords": ["inspection", "quality assurance", "facility manager", "site manager", "field operations"]
     },
-    "summary": "Check signage, queue density, and storefront conditions to validate a real-world operations alert.",
-    "title": "Queue density scan",
+    "summary": "Camera unit #3 at the shrine office is unresponsive. Check hardware status and attempt a reboot.",
+    "title": "Camera #3 Fault Response",
     "type": "Inspection"
   },
   {
-    "eta": "ETA 04:05",
-    "id": "task-learn-1",
-    "lane": "Model lane E2",
-    "location": "Tokyo Tower Zone",
-    "locationArea": "Minato",
-    "markerLabel": "LEARN",
+    "eta": "ETA 03:00",
+    "id": "task-shrine-nav-1",
+    "lane": "Guide lane D1",
+    "location": "Yaoyorozu Shrine — Inner Sanctuary",
+    "locationArea": "Yaoyorozu Shrine",
+    "markerLabel": "NAV",
+    "priority": "medium",
+    "requiredSkill": "Navigation",
+    "reward": "+18 route XP",
+    "searchProfile": {
+      "functions": ["Support"],
+      "titleKeywords": ["concierge", "guide", "community manager", "visitor experience", "field support"]
+    },
+    "summary": "Night access to the inner sanctuary is blocked. Verify the alternate route and assist with signage placement.",
+    "title": "Inner Sanctuary Night Route Setup",
+    "type": "Navigation"
+  },
+  {
+    "eta": "ETA 04:30",
+    "id": "task-shrine-learn-1",
+    "lane": "Research lane E2",
+    "location": "Yaoyorozu Shrine — Grounds",
+    "locationArea": "Yaoyorozu Shrine",
+    "markerLabel": "RES",
     "priority": "low",
     "requiredSkill": "Field Research",
-    "reward": "+16 model training XP",
+    "reward": "+15 model XP",
     "searchProfile": {
       "functions": ["Research"],
-      "titleKeywords": ["research", "user research", "field research", "interviewer", "community manager"]
+      "titleKeywords": ["researcher", "field research", "data collection", "interviewer", "community manager"]
     },
-    "summary": "Collect a short field report on edge-case wayfinding behavior to improve future quest routing.",
-    "title": "Wayfinding edge-case capture",
+    "summary": "Collect late-night visitor flow data across the grounds. Log congestion points to improve AI routing models.",
+    "title": "Late-Night Visitor Flow Survey",
     "type": "Learning"
   }
 ]
