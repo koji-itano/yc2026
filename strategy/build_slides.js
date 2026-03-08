@@ -192,13 +192,13 @@ biz.forEach((b, i) => {
 });
 
 s8.addText('チーム', { x: 5.5, y: 3.3, w: 4, h: 0.4, fontSize: 14, bold: true, color: C.dark });
-s8.addText('Koji Itano — 製造AI / フルスタック\nSota Kobayashi — プロダクト / デザイン\nSam Lo — エンジニアリング', { x: 5.5, y: 3.7, w: 4, h: 1.0, fontSize: 11, color: C.text, lineSpacingMultiple: 1.5 });
+s8.addText('Member A — 製造AI / フルスタック\nMember B — プロダクト / デザイン\nMember C — エンジニアリング', { x: 5.5, y: 3.7, w: 4, h: 1.0, fontSize: 11, color: C.text, lineSpacingMultiple: 1.5 });
 
 // Bottom bar
 s8.addShape(pptx.shapes.RECTANGLE, { x: 0, y: 4.8, w: 10, h: 0.75, fill: { color: C.dark } });
 s8.addText('Guidance OS — Physical Work の TDD', { x: 0.5, y: 4.85, w: 9, h: 0.6, fontSize: 18, bold: true, color: C.orange, align: 'center', valign: 'middle' });
 
 // Save
-pptx.writeFile({ fileName: '/Users/koji/Documents/company/yc2026/strategy/slide_v2.pptx' })
+pptx.writeFile({ fileName: './slide_v2.pptx' })
   .then(() => console.log('Done: slide_v2.pptx'))
   .catch(e => console.error(e));
