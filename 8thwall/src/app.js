@@ -20,6 +20,8 @@ const state = {
   proofRecord: null,
   eventLog: [],
   imageTargetsConfigured: [],
+  activeTargetProfile: "itoen-label",
+  activeTargetLabel: "Ito En label",
   cameraStatus: "booting",
   desktopWebcamEnabled: false,
   desktopStream: null,
@@ -50,6 +52,41 @@ function recordEvent(type, detail = {}) {
   if (state.eventLog.length > 20) {
     state.eventLog.shift();
   }
+}
+
+function getTargetProfiles() {
+  return {
+    "itoen-label": {
+      label: "Ito En label",
+      targets: [itoenLabelTarget],
+      waitingTitle: "Use the flat Ito En label",
+      waitingBody: "Hold the printed Ito En label flat, centered, and fill about half the frame.",
+    },
+    "canister-cap": {
+      label: "Canister cap photo",
+      targets: [canisterCapTarget],
+      waitingTitle: "Use the canister cap target",
+      waitingBody: "Show the printed canister-cap target flat to the camera and reduce glare.",
+    },
+    all: {
+      label: "All targets",
+      targets: [itoenLabelTarget, canisterCapTarget],
+      waitingTitle: "Use the Ito En label first",
+      waitingBody: "Start with the flat Ito En label. It is more stable than the canister photo target.",
+    },
+  }
+}
+
+function getRequestedTargetProfile() {
+  const params = new URLSearchParams(window.location.search)
+  const requested = (params.get("target") || "").toLowerCase()
+  const profiles = getTargetProfiles()
+
+  if (profiles[requested]) {
+    return requested
+  }
+
+  return isDesktopBrowser() ? "all" : "itoen-label"
 }
 
 function ensureOverlay() {
@@ -225,6 +262,65 @@ function ensureOverlay() {
       color: var(--rpg-text);
       background: rgba(5, 9, 13, 0.56);
       backdrop-filter: blur(18px);
+    }
+
+    .rpg-detection-guide {
+      position: fixed;
+      left: 50%;
+      top: 54%;
+      transform: translate(-50%, -50%);
+      z-index: 8500;
+      width: min(72vw, 360px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .rpg-detection-frame {
+      width: min(72vw, 360px);
+      aspect-ratio: 4 / 3;
+      border-radius: 22px;
+      border: 2px solid rgba(108, 240, 178, 0.7);
+      box-shadow:
+        0 0 0 9999px rgba(0, 0, 0, 0.14),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+      position: relative;
+    }
+
+    .rpg-detection-frame::before,
+    .rpg-detection-frame::after {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border: 1px dashed rgba(255, 255, 255, 0.18);
+      border-radius: 16px;
+    }
+
+    .rpg-detection-copy {
+      max-width: min(76vw, 420px);
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(8, 14, 19, 0.72);
+      border: 1px solid rgba(128, 208, 255, 0.22);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+      text-align: center;
+    }
+
+    .rpg-detection-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: #eef7fb;
+    }
+
+    .rpg-detection-body {
+      margin: 6px 0 0;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--rpg-muted);
     }
 
     .rpg-main {
@@ -566,6 +662,23 @@ function ensureOverlay() {
         max-height: 40px;
         font-size: 10px;
       }
+      .rpg-guidance-arrow {
+        font-size: 60px;
+      }
+
+      .rpg-guidance-label {
+        max-width: calc(100vw - 48px);
+        font-size: 12px;
+      }
+
+      .rpg-detection-guide,
+      .rpg-detection-frame {
+        width: min(78vw, 320px);
+      }
+
+      .rpg-detection-copy {
+        max-width: calc(100vw - 36px);
+      }
     }
   `;
   document.head.appendChild(style);
@@ -581,13 +694,27 @@ function ensureOverlay() {
         handing a structured record back to the dashboard.
       </p>
       <div class="rpg-chip-row">
-        <span class="rpg-chip" id="rpg-provider-chip">Provider: booting</span>
+        <span class="rpg-chip" id="rpg-target-found-chip">Image target: waiting</span>
         <span class="rpg-chip" id="rpg-status-chip">Status: booting</span>
+        <span class="rpg-chip" id="rpg-expected-target-chip">Expected: Ito En label</span>
         <span class="rpg-chip" id="rpg-target-chip">Target: waiting</span>
         <span class="rpg-chip" id="rpg-camera-chip">Camera: booting</span>
         <button id="rpg-focus-button" class="rpg-focus-toggle" type="button">Hide controls</button>
       </div>
     </section>
+    <div class="rpg-detection-guide" id="rpg-detection-guide">
+      <div class="rpg-detection-frame" aria-hidden="true"></div>
+      <div class="rpg-detection-copy">
+        <p class="rpg-detection-title" id="rpg-detection-title">Use the flat Ito En label</p>
+        <p class="rpg-detection-body" id="rpg-detection-body">
+          Hold the printed Ito En label flat, centered, and fill about half the frame.
+        </p>
+      </div>
+    </div>
+    <div class="rpg-guidance" id="rpg-guidance">
+      <div class="rpg-guidance-arrow" aria-hidden="true">↻</div>
+      <div class="rpg-guidance-label" id="rpg-guidance-label">Turn clockwise to secure the cap.</div>
+    </div>
     <div class="rpg-main">
       <section class="rpg-card">
         <p class="rpg-eyebrow">Worker task</p>
@@ -644,10 +771,16 @@ function ensureOverlay() {
   document.body.appendChild(overlay);
 
   DOM.overlay = overlay;
-  DOM.providerChip = document.getElementById("rpg-provider-chip");
+  DOM.targetFoundChip = document.getElementById("rpg-target-found-chip");
   DOM.statusChip = document.getElementById("rpg-status-chip");
+  DOM.expectedTargetChip = document.getElementById("rpg-expected-target-chip");
   DOM.targetChip = document.getElementById("rpg-target-chip");
   DOM.cameraChip = document.getElementById("rpg-camera-chip");
+  DOM.detectionGuide = document.getElementById("rpg-detection-guide");
+  DOM.detectionTitle = document.getElementById("rpg-detection-title");
+  DOM.detectionBody = document.getElementById("rpg-detection-body");
+  DOM.guidance = document.getElementById("rpg-guidance");
+  DOM.guidanceLabel = document.getElementById("rpg-guidance-label");
   DOM.focusButton = document.getElementById("rpg-focus-button");
   DOM.taskId = document.getElementById("rpg-task-id");
   DOM.workerId = document.getElementById("rpg-worker-id");
@@ -681,12 +814,20 @@ function ensureOverlay() {
 
 function render() {
   const cameraActive = state.desktopWebcamEnabled || state.liveCameraEnabled;
+  const imageTargetActive = isImageTargetActive();
+  const showDetectionGuide = cameraActive && !state.targetLocked;
 
   DOM.overlay.classList.toggle("rpg-focus-mode", state.focusMode);
-  DOM.providerChip.textContent = `Provider: ${state.provider}`;
+  DOM.targetFoundChip.textContent = `Image target: ${imageTargetActive ? "found" : "waiting"}`;
   DOM.statusChip.textContent = `Status: ${state.trackingStatus}`;
+  DOM.expectedTargetChip.textContent = `Expected: ${state.activeTargetLabel}`;
   DOM.targetChip.textContent = `Target: ${state.targetName}`;
   DOM.cameraChip.textContent = `Camera: ${state.cameraStatus}`;
+  DOM.detectionGuide.style.display = showDetectionGuide ? "flex" : "none";
+  DOM.detectionTitle.textContent = getTargetProfiles()[state.activeTargetProfile].waitingTitle;
+  DOM.detectionBody.textContent = getTargetProfiles()[state.activeTargetProfile].waitingBody;
+  DOM.guidance.style.display = imageTargetActive ? "flex" : "none";
+  DOM.guidanceLabel.textContent = `Target found: ${state.targetName}. Turn clockwise to secure the cap.`;
   DOM.focusButton.style.display = cameraActive ? "inline-flex" : "none";
   DOM.focusButton.textContent = state.focusMode ? "Show controls" : "Hide controls";
   DOM.taskId.textContent = state.taskId;
@@ -713,6 +854,10 @@ function render() {
   renderLog();
 }
 
+function isImageTargetActive() {
+  return state.targetLocked && state.anchorMode === "image-target";
+}
+
 function syncSceneCanvasVisibility() {
   const sceneCanvases = Array.from(document.querySelectorAll("body canvas:not(#rpg-desktop-preview)"));
   const hideSceneCanvas = !isDesktopBrowser() && state.liveCameraEnabled;
@@ -736,7 +881,7 @@ function buildNote() {
       return "On iPhone, tap Enable live camera first so the canister stays visible while you use the manual anchor flow.";
     }
     if (state.imageTargetsConfigured.length) {
-      return `Scanning for image targets: ${state.imageTargetsConfigured.join(", ")}. Use manual lock if tracking is unavailable.`;
+      return `Scanning for ${state.activeTargetLabel}. Keep it flat, centered, and fill roughly 40-60% of the frame.`;
     }
     return "No configured image target payload was found. Use manual lock to continue the tabletop demo.";
   }
@@ -1119,6 +1264,7 @@ function handleTargetUpdated(detail) {
 
 function handleTargetLost(detail) {
   state.targetLocked = false;
+  state.anchorMode = "unlocked";
   state.trackingStatus = "Image target lost";
   recordEvent("image_lost", detail || {});
   render();
@@ -1129,10 +1275,18 @@ function configureImageTargets() {
     return;
   }
 
-  const imageTargetData = [itoenLabelTarget, canisterCapTarget];
+  const profiles = getTargetProfiles()
+  const selectedProfile = getRequestedTargetProfile()
+  const imageTargetData = profiles[selectedProfile].targets
+
+  state.activeTargetProfile = selectedProfile
+  state.activeTargetLabel = profiles[selectedProfile].label
   window.XR8.XrController.configure({ imageTargetData });
   state.imageTargetsConfigured = imageTargetData.map((target) => target.name);
-  recordEvent("image_targets_configured", { imageTargets: state.imageTargetsConfigured });
+  recordEvent("image_targets_configured", {
+    profile: selectedProfile,
+    imageTargets: state.imageTargetsConfigured,
+  });
 }
 
 function installXR8Listeners() {

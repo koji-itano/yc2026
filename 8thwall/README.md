@@ -24,6 +24,8 @@ Notes:
 - Trusted local HTTPS works best with `mkcert`. If Safari blocks camera access, install the local CA on the phone or use a public HTTPS tunnel.
 - The local mkcert root CA is typically at `~/Library/Application Support/mkcert/rootCA.pem`. AirDrop it to the iPhone, install the profile, then enable full trust in `Settings > General > About > Certificate Trust Settings`.
 - Generated certificates are stored in `certs/` and are ignored by git.
+- On iPhone, the default image target profile is `itoen-label` for stability. Use `?target=all` only if you need to test multiple targets.
+- For the best `imagefound` result, keep the printed Ito En label flat, centered, evenly lit, and filling roughly 40-60% of the frame.
 
 This export now includes a WIL-9 tabletop worker overlay in `src/app.js`.
 It adds:
