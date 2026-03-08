@@ -1,0 +1,9 @@
+{
+  "name": "real-physical-gigs-prototype",
+  "private": true,
+  "scripts": {
+    "start": "node prototype/server.js",
+    "validate": "node prototype/validate.js",
+    "validate:server": "node prototype/validate-server.js"
+  }
+}

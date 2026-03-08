@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="540" viewBox="0 0 720 540">
+  <rect width="720" height="540" fill="#efe3cd"/>
+  <rect x="180" y="120" width="360" height="280" rx="28" fill="#9da3a6"/>
+  <rect x="290" y="80" width="140" height="70" rx="20" fill="#ce4e36"/>
+  <text x="360" y="470" font-family="Arial, sans-serif" font-size="34" text-anchor="middle" fill="#4c2e1d">BEFORE: cap unsecured</text>
+</svg>

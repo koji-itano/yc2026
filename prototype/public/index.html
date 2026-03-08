@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real Physical Gigs Dispatch Dashboard</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Real Physical Gigs / Dispatch</p>
+        <h1>Tabletop canister quest console</h1>
+        <p>Operator dashboard for the recovered WIL-8 dispatch, proof, verification, and payout flow.</p>
+        <div class="chips">
+          <span class="chip">Green task only</span>
+          <span class="chip">Status: <strong id="statusValue">Loading</strong></span>
+          <span class="chip">Verification: <strong id="verificationValue">Loading</strong></span>
+        </div>
+      </section>
+
+      <section class="split">
+        <article class="panel">
+          <div>
+            <p class="eyebrow">Presenter cue</p>
+            <p id="presenterCue"></p>
+          </div>
+          <div class="actions">
+            <button class="secondary" data-action="reset">Reset demo</button>
+            <button data-action="auto-run">Auto-run sample flow</button>
+            <button class="secondary" id="exportAudit">Export audit JSON</button>
+          </div>
+        </article>
+        <article class="panel">
+          <div>
+            <p class="eyebrow">Worker route</p>
+            <h3>Open this on the phone</h3>
+            <pre>http://localhost:4174/worker</pre>
+          </div>
+          <div>
+            <p class="eyebrow">Validation</p>
+            <pre>npm run validate
+npm run validate:server</pre>
+          </div>
+        </article>
+      </section>
+
+      <section class="evidenceGrid">
+        <article class="evidenceCard">
+          <p class="eyebrow">Before proof</p>
+          <img id="beforeImage" alt="Before proof" />
+        </article>
+        <article class="evidenceCard">
+          <p class="eyebrow">After proof</p>
+          <img id="afterImage" alt="After proof" />
+        </article>
+      </section>
+
+      <section class="panel">
+        <p class="eyebrow">Audit log</p>
+        <pre id="auditOutput"></pre>
+      </section>
+
+      <section class="panel">
+        <p class="eyebrow">Event timeline</p>
+        <pre id="eventLog"></pre>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
