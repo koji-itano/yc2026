@@ -117,6 +117,8 @@ When relevant, maintain the risk taxonomy:
   prefix before making changes.
 - For import-heavy tasks, make small logical commits as soon as each stable chunk lands in the main
   repository copy.
+- After each logical commit on an issue branch, push that branch to `origin` before continuing with
+  more work so the latest artifact state is recoverable outside the isolated workspace.
 - Preferred import commit boundaries are:
   - docs and runbooks
   - prototype code
