@@ -44,14 +44,14 @@
       "name": "Camera",
       "position": [
         0,
-        5,
-        5
+        0,
+        3
       ],
       "rotation": [
-        -1.8412919444518387e-17,
-        0.9537169517857893,
-        -0.30070579621354565,
-        -5.839832572618051e-17
+        0,
+        0,
+        0,
+        1
       ],
       "scale": [
         0.9999998646558023,
@@ -93,8 +93,8 @@
     "e72f8145-d2fd-4946-9abe-97ef525c079e": {
       "id": "e72f8145-d2fd-4946-9abe-97ef525c079e",
       "position": [
-        -0.798268621533212,
-        0.6792425892402574,
+        0,
+        0.2,
         0
       ],
       "rotation": [
@@ -113,14 +113,14 @@
       "parentId": "88453035-dc0f-486d-868a-8ff7c2fda864",
       "components": {},
       "ui": {
-        "width": 70,
-        "height": 10,
-        "text": "Sample Text",
-        "color": "#ffffff",
-        "fontSize": 12,
+        "width": 220,
+        "height": 32,
+        "text": "TURN CLOCKWISE",
+        "color": "#6cf0b2",
+        "fontSize": 26,
         "type": "3d"
       },
-      "name": "テキスト",
+      "name": "Canister Guide Text",
       "order": 2.884368279652997
     }
   },

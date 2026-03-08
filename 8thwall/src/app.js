@@ -121,6 +121,16 @@ function ensureOverlay() {
       pointer-events: none;
     }
 
+    body canvas:not(#rpg-desktop-preview) {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 2;
+      background: transparent !important;
+      pointer-events: none;
+    }
+
     .rpg-topbar,
     .rpg-card,
     .rpg-proof {
