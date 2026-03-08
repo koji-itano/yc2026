@@ -35,6 +35,7 @@ A local 8th Wall export now exists outside the main repo at:
 Current state of that export:
 
 - `src/app.js` now provides a WIL-9 worker overlay for the canister task
+- the overlay now exposes a Mac desktop `Enable desktop webcam` path using `getUserMedia()`
 - the overlay supports manual anchor lock, before/after capture, and proof JSON generation
 - `reality.imagescanning`, `reality.imagefound`, `reality.imageupdated`, `reality.imagelost`,
   and `reality.trackingstatus` listeners are wired
