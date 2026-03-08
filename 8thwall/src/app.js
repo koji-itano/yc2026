@@ -10,7 +10,7 @@ const state = {
   taskClass: "green task",
   provider: "8th Wall runtime",
   trackingStatus: "Waiting for XR runtime",
-  targetName: "manual-fallback",
+  targetName: "waiting",
   targetLocked: false,
   anchorMode: "unlocked",
   attemptNumber: 0,
@@ -1265,6 +1265,7 @@ function handleTargetUpdated(detail) {
 function handleTargetLost(detail) {
   state.targetLocked = false;
   state.anchorMode = "unlocked";
+  state.targetName = "waiting";
   state.trackingStatus = "Image target lost";
   recordEvent("image_lost", detail || {});
   render();
@@ -1351,7 +1352,7 @@ function attachGlobalBridge() {
     resetSession: () => {
       state.sessionId = newSessionId();
       state.targetLocked = false;
-      state.targetName = "manual-fallback";
+      state.targetName = "waiting";
       state.anchorMode = "unlocked";
       state.attemptNumber = 0;
       state.beforeCapture = null;
