@@ -74,9 +74,14 @@ function buildDashboardUrl() {
 
 async function copyText(text, fallbackNode) {
   if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-    await navigator.clipboard.writeText(text);
-    fallbackNode.textContent = `${text}\n\nCopied to clipboard.`;
-    return;
+    try {
+      await navigator.clipboard.writeText(text);
+      fallbackNode.textContent = `${text}\n\nCopied to clipboard.`;
+      return;
+    } catch (error) {
+      fallbackNode.textContent = `${text}\n\nClipboard write failed. Copy this link manually.`;
+      return;
+    }
   }
 
   fallbackNode.textContent = `${text}\n\nClipboard API unavailable in this browser.`;

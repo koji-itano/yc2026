@@ -24,8 +24,9 @@ function contentType(filePath) {
 }
 
 function safeJoin(urlPath) {
-  const normalized = path.normalize(path.join(root, urlPath));
-  if (!normalized.startsWith(root)) {
+  const relativePath = urlPath.replace(/^\/+/, "");
+  const normalized = path.resolve(root, relativePath);
+  if (normalized !== root && !normalized.startsWith(`${root}${path.sep}`)) {
     return null;
   }
   return normalized;

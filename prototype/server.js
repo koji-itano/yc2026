@@ -95,8 +95,9 @@ function routeStatic(urlPath, res) {
     return true;
   }
 
-  const requested = path.normalize(path.join(root, urlPath));
-  if (!requested.startsWith(root)) {
+  const relativePath = urlPath.replace(/^\/+/, "");
+  const requested = path.resolve(root, relativePath);
+  if (requested !== root && !requested.startsWith(`${root}${path.sep}`)) {
     res.writeHead(403);
     res.end("Forbidden");
     return true;
