@@ -2332,9 +2332,9 @@ textarea {
 .companyQuestRow:hover { background: rgba(78,140,255,.04); }
 .companyQuestLeft { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
 .companyStatusChip { flex: none; padding: 4px 10px; border-radius: 999px; border: 1px solid; font-size: .6rem; font-weight: 900; letter-spacing: .14em; }
-.companyQuestTitle { display: block; color: #dde6ff; font-size: .88rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.companyQuestMeta { display: block; color: rgba(180,195,240,.4); font-size: .7rem; margin-top: 2px; }
-.companyQuestRight { display: flex; align-items: center; gap: 12px; flex: none; }
+.companyQuestTitle { display: block; color: #dde6ff; font-size: .88rem; font-weight: 800; overflow-wrap: break-word; word-break: break-word; }
+.companyQuestMeta { display: block; color: rgba(180,195,240,.4); font-size: .7rem; margin-top: 2px; overflow-wrap: break-word; word-break: break-word; }
+.companyQuestRight { display: flex; align-items: center; gap: 12px; flex-shrink: 0; white-space: nowrap; }
 .companyPriorityChip { font-size: .6rem; font-weight: 900; letter-spacing: .12em; }
 .companyQuestTime { color: rgba(180,195,240,.35); font-size: .7rem; white-space: nowrap; }
 
