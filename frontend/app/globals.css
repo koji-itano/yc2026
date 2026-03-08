@@ -62,12 +62,142 @@ a {
 .mapPage {
   position: relative;
   min-height: 100vh;
+  overflow: hidden;
+}
+
+.mapSurface {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
 }
 
 .mapCanvas {
   width: 100%;
   min-height: 100vh;
   filter: grayscale(0.22) saturate(0.78) brightness(0.66) contrast(1.16);
+}
+
+.taskIngressLayer {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: 12px;
+  left: 12px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.taskNoticeStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.taskNoticeCard {
+  position: relative;
+  width: min(100%, 320px);
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid var(--task-color);
+  border-radius: 16px;
+  background: rgba(25, 27, 36, 0.92);
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(14px);
+  transform: translateX(calc(var(--stack-index) * 6px));
+  opacity: calc(1 - var(--stack-index) * 0.14);
+  animation: taskNoticeStackIn 4.2s ease-in-out infinite;
+}
+
+.taskNoticeCardCurrent {
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.28),
+    0 0 28px color-mix(in srgb, var(--task-color) 20%, transparent);
+}
+
+.taskNoticeHeader,
+.taskNoticeMeta,
+.taskNoticeFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.taskNoticeHeader {
+  color: #f8fbff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.taskNoticeApp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.taskNoticeApp::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background:
+    linear-gradient(135deg, #36c5f0 0%, #2eb67d 48%, #ecb22e 72%, #e01e5a 100%);
+}
+
+.taskNoticeTime,
+.taskNoticeFooter {
+  color: #9aa5c1;
+  font-size: 0.72rem;
+}
+
+.taskNoticeMeta {
+  margin-top: 8px;
+}
+
+.taskNoticeChannel {
+  color: #dfe6ff;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.taskNoticeBadge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--task-color) 18%, rgba(255, 255, 255, 0.04));
+  color: var(--task-accent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.taskNoticeBody {
+  margin-top: 10px;
+}
+
+.taskNoticeBody strong {
+  display: block;
+  color: #f8fbff;
+  font-size: 0.96rem;
+  line-height: 1.25;
+}
+
+.taskNoticeBody p {
+  margin: 6px 0 0;
+  color: #b5bfd8;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.taskNoticeFooter {
+  margin-top: 10px;
+}
+
+.taskIngressTarget {
+  display: none;
 }
 
 .mapFallback {
@@ -226,6 +356,23 @@ a {
   cursor: pointer;
 }
 
+.questMarkerActive .questMarkerPulse {
+  animation-duration: 1s;
+  background: color-mix(in srgb, var(--marker-color) 42%, transparent);
+}
+
+.questMarkerActive .questMarkerCore {
+  box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--marker-accent) 18%, transparent),
+    0 0 30px color-mix(in srgb, var(--marker-color) 92%, transparent);
+}
+
+.questMarkerActive .questMarkerLabel {
+  color: #ffffff;
+  border-color: color-mix(in srgb, var(--marker-accent) 58%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--marker-color) 25%, transparent);
+}
+
 .questPopupWrapper .leaflet-popup-content-wrapper {
   border: 1px solid rgba(148, 168, 255, 0.22);
   border-radius: 18px;
@@ -362,6 +509,24 @@ a {
   }
 }
 
+@keyframes taskNoticeStackIn {
+  0% {
+    transform: translateX(calc(18px + var(--stack-index) * 6px));
+    opacity: 0;
+  }
+
+  12%,
+  78% {
+    transform: translateX(calc(var(--stack-index) * 6px));
+    opacity: calc(1 - var(--stack-index) * 0.14);
+  }
+
+  100% {
+    transform: translateX(calc(10px + var(--stack-index) * 6px));
+    opacity: 0;
+  }
+}
+
 @keyframes pulse {
   0%,
   100% {
@@ -388,6 +553,22 @@ a {
 }
 
 @media (max-width: 720px) {
+  .taskIngressLayer {
+    top: max(8px, env(safe-area-inset-top));
+    right: 8px;
+    left: 8px;
+  }
+
+  .taskNoticeCard {
+    width: min(100%, 292px);
+    padding: 11px 12px;
+    border-radius: 16px;
+  }
+
+  .taskNoticeBody strong {
+    font-size: 0.9rem;
+  }
+
   .leaflet-top.leaflet-left {
     top: 14px;
     right: 14px;

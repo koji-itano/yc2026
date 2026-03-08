@@ -1,71 +1,148 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
 
 type QuestMarker = {
+  accent: string;
   color: string;
   coordinates: [number, number];
   label: string;
   location: string;
+  overlayPosition: {
+    x: string;
+    y: string;
+  };
   reward: string;
   summary: string;
   type: string;
 };
 
-const questMarkers: QuestMarker[] = [
+type IncomingTask = {
+  eta: string;
+  id: string;
+  lane: string;
+  markerLabel: QuestMarker["label"];
+  reward: string;
+  title: string;
+  type: string;
+};
+
+const questMarkers = [
   {
+    accent: "#b5fff4",
     color: "#4ee6ff",
     coordinates: [139.6996, 35.6585],
     label: "NAV",
     location: "Shibuya Station",
+    overlayPosition: { x: "28%", y: "66%" },
     reward: "+24 route XP",
     summary: "Verify a pedestrian detour and capture the fastest accessible path for incoming riders.",
     type: "Navigation",
   },
   {
+    accent: "#ddd5ff",
     color: "#8f72ff",
     coordinates: [139.7648, 35.6762],
     label: "TOUR",
     location: "Ginza Corridor",
+    overlayPosition: { x: "70%", y: "48%" },
     reward: "+18 local guide XP",
     summary: "Scout a premium shopping route and confirm which storefronts are still open for a live concierge flow.",
     type: "Tourism",
   },
   {
+    accent: "#d2e6ff",
     color: "#4e8cff",
     coordinates: [139.7006, 35.6896],
     label: "GIG",
     location: "Shinjuku Grid",
+    overlayPosition: { x: "30%", y: "38%" },
     reward: "+31 dispatch XP",
     summary: "Complete a fast physical pickup and confirm handoff readiness for an AI-routed delivery chain.",
     type: "Gig Work",
   },
   {
+    accent: "#ffd7fa",
     color: "#f25fff",
     coordinates: [139.7708, 35.6812],
     label: "INSP",
     location: "Tokyo Station East",
+    overlayPosition: { x: "73%", y: "40%" },
     reward: "+27 inspection XP",
     summary: "Check signage, queue density, and storefront conditions to validate a real-world operations alert.",
     type: "Inspection",
   },
   {
+    accent: "#ddfbff",
     color: "#68d5ff",
     coordinates: [139.7454, 35.658],
     label: "LEARN",
     location: "Tokyo Tower Zone",
+    overlayPosition: { x: "58%", y: "67%" },
     reward: "+16 model training XP",
     summary: "Collect a short field report on edge-case wayfinding behavior to improve future quest routing.",
     type: "Learning",
   },
+] satisfies QuestMarker[];
+
+const incomingTasks: IncomingTask[] = [
+  {
+    eta: "ETA 02:10",
+    id: "task-nav-1",
+    lane: "Ingress lane A3",
+    markerLabel: "NAV",
+    reward: "+24 route XP",
+    title: "Station detour verification",
+    type: "Navigation",
+  },
+  {
+    eta: "ETA 01:45",
+    id: "task-gig-1",
+    lane: "Dispatch lane C1",
+    markerLabel: "GIG",
+    reward: "+31 dispatch XP",
+    title: "Rapid pickup handoff",
+    type: "Gig Work",
+  },
+  {
+    eta: "ETA 03:30",
+    id: "task-tour-1",
+    lane: "Guide lane B2",
+    markerLabel: "TOUR",
+    reward: "+18 local guide XP",
+    title: "Luxury corridor availability",
+    type: "Tourism",
+  },
+  {
+    eta: "ETA 02:55",
+    id: "task-insp-1",
+    lane: "Ops lane D4",
+    markerLabel: "INSP",
+    reward: "+27 inspection XP",
+    title: "Queue density scan",
+    type: "Inspection",
+  },
+  {
+    eta: "ETA 04:05",
+    id: "task-learn-1",
+    lane: "Model lane E2",
+    markerLabel: "LEARN",
+    reward: "+16 model training XP",
+    title: "Wayfinding edge-case capture",
+    type: "Learning",
+  },
 ];
+
+const initialVisibleMarkerLabels: QuestMarker["label"][] = [incomingTasks[0].markerLabel];
 
 const mapCenter: [number, number] = [139.7454, 35.6762];
 
-function buildMarkerElement(marker: QuestMarker) {
+function buildMarkerElement(marker: QuestMarker, isActive = false) {
   const wrapper = document.createElement("div");
-  wrapper.className = "questMarker";
+  wrapper.className = `questMarker${isActive ? " questMarkerActive" : ""}`;
   wrapper.style.setProperty("--marker-color", marker.color);
+  wrapper.style.setProperty("--marker-accent", marker.accent);
   wrapper.setAttribute("aria-label", `${marker.type} quest marker`);
 
   const pulse = document.createElement("span");
@@ -98,7 +175,42 @@ function buildPopupContent(marker: QuestMarker) {
 
 export function HeroMap() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const leafletRef = useRef<typeof import("leaflet") | null>(null);
+  const mapRef = useRef<import("leaflet").Map | null>(null);
+  const markersRef = useRef<Array<{ label: string; marker: import("leaflet").Marker }>>([]);
   const [isReady, setIsReady] = useState(false);
+  const [taskIndex, setTaskIndex] = useState(0);
+  const [visibleMarkerLabels, setVisibleMarkerLabels] =
+    useState<QuestMarker["label"][]>(initialVisibleMarkerLabels);
+
+  const activeTask = incomingTasks[taskIndex % incomingTasks.length];
+  const activeQuestMarker =
+    questMarkers.find((marker) => marker.label === activeTask.markerLabel) ?? questMarkers[0];
+  const stackedTasks = [
+    activeTask,
+    incomingTasks[(taskIndex + 1) % incomingTasks.length],
+    incomingTasks[(taskIndex + 2) % incomingTasks.length],
+  ];
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setTaskIndex((current) => (current + 1) % incomingTasks.length);
+    }, 4200);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    setVisibleMarkerLabels((current) => {
+      if (current.includes(activeTask.markerLabel)) {
+        return current;
+      }
+
+      return [...current, activeTask.markerLabel];
+    });
+  }, [activeTask.markerLabel]);
 
   useEffect(() => {
     if (!containerRef.current) {
@@ -110,6 +222,7 @@ export function HeroMap() {
 
     async function init() {
       const leaflet = await import("leaflet");
+      leafletRef.current = leaflet;
 
       if (cancelled) {
         return;
@@ -128,6 +241,7 @@ export function HeroMap() {
         keyboard: true,
         tapHold: false,
       });
+      mapRef.current = map;
 
       leaflet
         .tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -137,11 +251,15 @@ export function HeroMap() {
         })
         .addTo(map);
 
-      const markers = questMarkers.map((marker) =>
-        leaflet
+      const markers = questMarkers.map((marker) => {
+        const instance = leaflet
           .marker([marker.coordinates[1], marker.coordinates[0]], {
             icon: leaflet.divIcon({
-              html: buildMarkerElement(marker).outerHTML,
+              html: buildMarkerElement(
+                marker,
+                marker.label === incomingTasks[0].markerLabel &&
+                  initialVisibleMarkerLabels.includes(marker.label),
+              ).outerHTML,
               className: "questMarkerWrapper",
               iconSize: [32, 52],
               iconAnchor: [16, 44],
@@ -151,22 +269,32 @@ export function HeroMap() {
             bubblingMouseEvents: true,
             zIndexOffset: 1000,
           })
-          .addTo(map)
           .bindPopup(buildPopupContent(marker), {
             autoPan: true,
             closeButton: false,
             className: "questPopupWrapper",
             maxWidth: 320,
             offset: [0, -24],
-          }),
-      );
+          });
+
+        if (initialVisibleMarkerLabels.includes(marker.label)) {
+          instance.addTo(map);
+        }
+
+        return { label: marker.label, marker: instance };
+      });
+
+      markersRef.current = markers;
 
       map.whenReady(() => {
         setIsReady(true);
       });
 
       return () => {
-        markers.forEach((marker) => marker.remove());
+        leafletRef.current = null;
+        mapRef.current = null;
+        markersRef.current = [];
+        markers.forEach(({ marker }) => marker.remove());
         map.remove();
       };
     }
@@ -185,12 +313,105 @@ export function HeroMap() {
     };
   }, []);
 
+  useEffect(() => {
+    if (markersRef.current.length === 0 || !leafletRef.current) {
+      return;
+    }
+
+    const leaflet = leafletRef.current;
+
+    markersRef.current.forEach(({ label, marker }) => {
+      const questMarker = questMarkers.find((item) => item.label === label);
+
+      if (!questMarker) {
+        return;
+      }
+
+      marker.setIcon(
+        leaflet.divIcon({
+          html: buildMarkerElement(
+            questMarker,
+            label === activeTask.markerLabel && visibleMarkerLabels.includes(label),
+          ).outerHTML,
+          className: "questMarkerWrapper",
+          iconSize: [32, 52],
+          iconAnchor: [16, 44],
+        }),
+      );
+
+    });
+  }, [activeTask.markerLabel, visibleMarkerLabels]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map) {
+      return;
+    }
+
+    markersRef.current.forEach(({ label, marker }) => {
+      const shouldShow = visibleMarkerLabels.includes(label);
+
+      if (shouldShow && !map.hasLayer(marker)) {
+        marker.addTo(map);
+      }
+
+      if (!shouldShow && map.hasLayer(marker)) {
+        map.removeLayer(marker);
+      }
+    });
+  }, [visibleMarkerLabels]);
+
   return (
     <>
-      <div aria-hidden="true" className={`mapFallback ${isReady ? "mapFallbackHidden" : "mapFallbackActive"}`}>
-        <div className="mapFallbackGrid" />
+      <div aria-hidden="true" className="taskIngressLayer">
+        <div className="taskNoticeStack" key={activeTask.id}>
+          {stackedTasks.map((task, index) => {
+            const marker =
+              questMarkers.find((item) => item.label === task.markerLabel) ?? activeQuestMarker;
+            const isCurrent = index === 0;
+
+            return (
+              <div
+                className={`taskNoticeCard${isCurrent ? " taskNoticeCardCurrent" : ""}`}
+                key={`${task.id}-${index}`}
+                style={
+                  {
+                    "--task-color": marker.color,
+                    "--task-accent": marker.accent,
+                    "--stack-index": String(index),
+                  } as CSSProperties
+                }
+              >
+                <div className="taskNoticeHeader">
+                  <span className="taskNoticeApp">Slack</span>
+                  <span className="taskNoticeTime">{task.eta}</span>
+                </div>
+                <div className="taskNoticeMeta">
+                  <span className="taskNoticeChannel">#ops-live</span>
+                  <span className="taskNoticeBadge">{marker.label}</span>
+                </div>
+                <div className="taskNoticeBody">
+                  <strong>{task.title}</strong>
+                  <p>
+                    {task.type} task opened for {marker.location}. {task.reward}
+                  </p>
+                </div>
+                <div className="taskNoticeFooter">
+                  <span>{task.lane}</span>
+                  <span>{isCurrent ? "new task" : "queued"}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <div className="mapCanvas" ref={containerRef} />
+      <div className="mapSurface">
+        <div aria-hidden="true" className={`mapFallback ${isReady ? "mapFallbackHidden" : "mapFallbackActive"}`}>
+          <div className="mapFallbackGrid" />
+        </div>
+        <div className="mapCanvas" ref={containerRef} />
+      </div>
     </>
   );
 }
