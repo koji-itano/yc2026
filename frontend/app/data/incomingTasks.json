@@ -9,6 +9,10 @@
     "priority": "high",
     "requiredSkill": "Navigation",
     "reward": "+24 route XP",
+    "searchProfile": {
+      "functions": ["Operations"],
+      "titleKeywords": ["operations manager", "field support", "mobility", "transport", "community manager"]
+    },
     "summary": "Verify a pedestrian detour and capture the fastest accessible path for incoming riders.",
     "title": "Station detour verification",
     "type": "Navigation"
@@ -23,6 +27,10 @@
     "priority": "high",
     "requiredSkill": "Dispatch",
     "reward": "+31 dispatch XP",
+    "searchProfile": {
+      "functions": ["Operations"],
+      "titleKeywords": ["dispatch", "logistics", "delivery", "operations manager", "field operations"]
+    },
     "summary": "Complete a fast physical pickup and confirm handoff readiness for an AI-routed delivery chain.",
     "title": "Rapid pickup handoff",
     "type": "Gig Work"
@@ -37,6 +45,10 @@
     "priority": "medium",
     "requiredSkill": "Tourism",
     "reward": "+18 local guide XP",
+    "searchProfile": {
+      "functions": ["Support"],
+      "titleKeywords": ["concierge", "hospitality", "guest experience", "tour coordinator", "community manager"]
+    },
     "summary": "Scout a premium shopping route and confirm which storefronts are still open for a live concierge flow.",
     "title": "Luxury corridor availability",
     "type": "Tourism"
@@ -51,6 +63,10 @@
     "priority": "medium",
     "requiredSkill": "Inspection",
     "reward": "+27 inspection XP",
+    "searchProfile": {
+      "functions": ["Operations"],
+      "titleKeywords": ["inspection", "quality assurance", "field operations", "retail operations", "site manager"]
+    },
     "summary": "Check signage, queue density, and storefront conditions to validate a real-world operations alert.",
     "title": "Queue density scan",
     "type": "Inspection"
@@ -65,6 +81,10 @@
     "priority": "low",
     "requiredSkill": "Field Research",
     "reward": "+16 model training XP",
+    "searchProfile": {
+      "functions": ["Research"],
+      "titleKeywords": ["research", "user research", "field research", "interviewer", "community manager"]
+    },
     "summary": "Collect a short field report on edge-case wayfinding behavior to improve future quest routing.",
     "title": "Wayfinding edge-case capture",
     "type": "Learning"

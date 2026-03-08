@@ -326,6 +326,21 @@ textarea {
   background: rgba(107, 114, 128, 0.12);
 }
 
+.adminChipProfilehigh {
+  color: #047857;
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.adminChipProfilemedium {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.14);
+}
+
+.adminChipProfilelow {
+  color: #6b7280;
+  background: rgba(107, 114, 128, 0.12);
+}
+
 .adminTaskHero {
   justify-content: space-between;
   align-items: flex-start;
@@ -416,6 +431,12 @@ textarea {
   gap: 12px;
 }
 
+.adminCandidateCompany {
+  margin: 8px 0 0;
+  color: #607089;
+  line-height: 1.5;
+}
+
 .adminCandidateRank {
   color: #1f66ff;
   font-size: 0.78rem;
@@ -434,6 +455,29 @@ textarea {
   font-size: 1.1rem;
   font-weight: 800;
   text-align: center;
+}
+
+.adminCandidatesState {
+  padding: 18px;
+  border: 1px dashed rgba(16, 28, 53, 0.16);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.adminCandidatesState strong {
+  display: block;
+  color: #0f1728;
+}
+
+.adminCandidatesState p {
+  margin: 8px 0 0;
+  color: #607089;
+  line-height: 1.5;
+}
+
+.adminCandidatesStateError {
+  border-color: rgba(190, 24, 93, 0.24);
+  background: rgba(255, 241, 242, 0.86);
 }
 
 .adminCandidateSkills {
@@ -462,9 +506,21 @@ textarea {
   margin-top: 6px;
 }
 
+.adminExternalLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid rgba(16, 28, 53, 0.1);
+  border-radius: 16px;
+  background: rgba(16, 28, 53, 0.04);
+  color: #0f1728;
+  font-weight: 700;
+}
+
 .adminAssignButton {
-  width: 100%;
-  margin-top: 14px;
+  flex: 1 1 160px;
   padding: 12px 14px;
   border: 0;
   border-radius: 16px;
@@ -1011,6 +1067,15 @@ textarea {
 
   .adminGrid {
     grid-template-columns: 1fr;
+  }
+
+  .adminCandidateActions {
+    flex-direction: column;
+  }
+
+  .adminExternalLink,
+  .adminAssignButton {
+    width: 100%;
   }
 
   .adminTaskFacts {
