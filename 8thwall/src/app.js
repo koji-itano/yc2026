@@ -26,6 +26,7 @@ const state = {
   desktopPreviewFrame: null,
   liveCameraEnabled: false,
   liveCameraStream: null,
+  focusMode: false,
 };
 
 const DOM = {};
@@ -92,6 +93,20 @@ function ensureOverlay() {
 
     #rpg-overlay * {
       box-sizing: border-box;
+    }
+
+    #rpg-overlay.rpg-focus-mode {
+      justify-content: flex-start;
+    }
+
+    #rpg-overlay.rpg-focus-mode .rpg-topbar {
+      padding-bottom: 10px;
+      background: rgba(8, 14, 19, 0.46);
+    }
+
+    #rpg-overlay.rpg-focus-mode .rpg-subtitle,
+    #rpg-overlay.rpg-focus-mode .rpg-main {
+      display: none;
     }
 
     #rpg-live-camera {
@@ -187,6 +202,19 @@ function ensureOverlay() {
       background: rgba(255, 255, 255, 0.04);
       font-size: 12px;
       color: var(--rpg-text);
+    }
+
+    .rpg-focus-toggle {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      min-height: 32px;
+      padding: 0 12px;
+      font: inherit;
+      font-size: 12px;
+      color: var(--rpg-text);
+      background: rgba(5, 9, 13, 0.56);
+      backdrop-filter: blur(18px);
     }
 
     .rpg-main {
@@ -547,6 +575,7 @@ function ensureOverlay() {
         <span class="rpg-chip" id="rpg-status-chip">Status: booting</span>
         <span class="rpg-chip" id="rpg-target-chip">Target: waiting</span>
         <span class="rpg-chip" id="rpg-camera-chip">Camera: booting</span>
+        <button id="rpg-focus-button" class="rpg-focus-toggle" type="button">Hide controls</button>
       </div>
     </section>
     <div class="rpg-main">
@@ -604,10 +633,12 @@ function ensureOverlay() {
   `;
   document.body.appendChild(overlay);
 
+  DOM.overlay = overlay;
   DOM.providerChip = document.getElementById("rpg-provider-chip");
   DOM.statusChip = document.getElementById("rpg-status-chip");
   DOM.targetChip = document.getElementById("rpg-target-chip");
   DOM.cameraChip = document.getElementById("rpg-camera-chip");
+  DOM.focusButton = document.getElementById("rpg-focus-button");
   DOM.taskId = document.getElementById("rpg-task-id");
   DOM.workerId = document.getElementById("rpg-worker-id");
   DOM.sessionId = document.getElementById("rpg-session-id");
@@ -629,6 +660,7 @@ function ensureOverlay() {
   DOM.desktopPreview = document.getElementById("rpg-desktop-preview");
 
   DOM.webcamButton.addEventListener("click", enableDesktopWebcam);
+  DOM.focusButton.addEventListener("click", toggleFocusMode);
   DOM.lockButton.addEventListener("click", lockManualAnchor);
   DOM.beforeButton.addEventListener("click", () => captureEvidence("before"));
   DOM.doneButton.addEventListener("click", markActionComplete);
@@ -638,10 +670,15 @@ function ensureOverlay() {
 }
 
 function render() {
+  const cameraActive = state.desktopWebcamEnabled || state.liveCameraEnabled;
+
+  DOM.overlay.classList.toggle("rpg-focus-mode", state.focusMode);
   DOM.providerChip.textContent = `Provider: ${state.provider}`;
   DOM.statusChip.textContent = `Status: ${state.trackingStatus}`;
   DOM.targetChip.textContent = `Target: ${state.targetName}`;
   DOM.cameraChip.textContent = `Camera: ${state.cameraStatus}`;
+  DOM.focusButton.style.display = cameraActive ? "inline-flex" : "none";
+  DOM.focusButton.textContent = state.focusMode ? "Show controls" : "Hide controls";
   DOM.taskId.textContent = state.taskId;
   DOM.workerId.textContent = state.workerId;
   DOM.sessionId.textContent = state.sessionId;
@@ -663,6 +700,12 @@ function render() {
   renderImageSlot(DOM.beforeSlot, state.beforeCapture, "Before");
   renderImageSlot(DOM.afterSlot, state.afterCapture, "After");
   renderLog();
+}
+
+function toggleFocusMode() {
+  state.focusMode = !state.focusMode;
+  recordEvent(state.focusMode ? "focus_mode_enabled" : "focus_mode_disabled");
+  render();
 }
 
 function buildNote() {
@@ -911,6 +954,7 @@ async function enableDesktopWebcam() {
     ]);
     state.desktopStream = stream;
     state.desktopWebcamEnabled = true;
+    state.focusMode = false;
     state.cameraStatus = "Desktop webcam live";
     DOM.desktopWebcam.srcObject = stream;
     await DOM.desktopWebcam.play();
@@ -945,6 +989,7 @@ async function enableLiveCamera() {
 
     state.liveCameraStream = stream;
     state.liveCameraEnabled = true;
+    state.focusMode = true;
     state.cameraStatus = "Browser camera live";
     DOM.liveCamera.srcObject = stream;
     await DOM.liveCamera.play();
