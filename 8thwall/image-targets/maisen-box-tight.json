@@ -1,0 +1,23 @@
+{
+  "imagePath": "image-targets/maisen-box-tight_luminance.jpg",
+  "metadata": null,
+  "name": "maisen-box-tight",
+  "type": "PLANAR",
+  "properties": {
+    "left": 0,
+    "top": 84,
+    "width": 2500,
+    "height": 3333,
+    "isRotated": false,
+    "originalWidth": 2500,
+    "originalHeight": 3500
+  },
+  "resources": {
+    "originalImage": "maisen-box-tight_original.jpg",
+    "croppedImage": "maisen-box-tight_cropped.jpg",
+    "thumbnailImage": "maisen-box-tight_thumbnail.jpg",
+    "luminanceImage": "maisen-box-tight_luminance.jpg"
+  },
+  "created": 1772953312994,
+  "updated": 1772953312994
+}

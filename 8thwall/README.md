@@ -24,8 +24,8 @@ Notes:
 - Trusted local HTTPS works best with `mkcert`. If Safari blocks camera access, install the local CA on the phone or use a public HTTPS tunnel.
 - The local mkcert root CA is typically at `~/Library/Application Support/mkcert/rootCA.pem`. AirDrop it to the iPhone, install the profile, then enable full trust in `Settings > General > About > Certificate Trust Settings`.
 - Generated certificates are stored in `certs/` and are ignored by git.
-- On iPhone, the default image target profile is `itoen-bottle-168h`, generated as a `CYLINDER` target from the real bottle front image with an effective side length of about `168mm`. Use `?target=all` only if you need to test multiple targets.
-- For the best `imagefound` result, keep the real Ito En bottle upright, centered, evenly lit, and filling roughly 40-60% of the frame.
+- On iPhone, the default image target profile is `maisen-box-tight`, generated as a `PLANAR` target from the cropped Maisen box front image. Use `?target=all` only if you need to test multiple targets.
+- For the best `imagefound` result, keep the Maisen box front flat, upright, evenly lit, and filling roughly 40-60% of the frame.
 
 This export now includes a WIL-9 tabletop worker overlay in `src/app.js`.
 It adds:
@@ -53,7 +53,7 @@ devServer: {
 2. Open the printed network URL on the phone over the same Wi-Fi.
 3. This export now loads two generated image targets by default:
 
-- `image-targets/itoen-bottle-168h.json`
+- `image-targets/maisen-box-tight.json`
 - `image-targets/canister-cap.json`
 
 4. If target lock is unstable, use `Lock manual anchor` and continue the same proof flow.
@@ -78,7 +78,7 @@ before/after capture flow on desktop without waiting for a phone handoff.
 Once the desktop webcam preview is live:
 
 1. Hold one of these targets in front of the Mac webcam, or show it on a second screen:
-   - `image-targets/itoen-bottle-168h_original.jpg`
+   - `image-targets/maisen-box-tight_original.jpg`
    - `image-targets/canister-cap_original.jpg`
 2. Watch the event log in the overlay.
 3. A successful target lock should append:
@@ -88,7 +88,7 @@ Once the desktop webcam preview is live:
    - brighter light
    - filling more of the preview frame with the target
    - reducing glare on the canister-cap photo
-   - using the Ito En bottle first, since it is now the default cylindrical target
+   - using the Maisen box first, since it is now the default planar target
 
 The overlay also exposes:
 

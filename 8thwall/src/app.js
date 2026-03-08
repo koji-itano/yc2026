@@ -1,4 +1,4 @@
-import itoenBottleTarget from '../image-targets/itoen-bottle-168h.json'
+import maisenBoxTightTarget from '../image-targets/maisen-box-tight.json'
 import canisterCapTarget from '../image-targets/canister-cap.json'
 
 const state = {
@@ -20,8 +20,8 @@ const state = {
   proofRecord: null,
   eventLog: [],
   imageTargetsConfigured: [],
-  activeTargetProfile: "itoen-bottle",
-  activeTargetLabel: "Ito En bottle front",
+  activeTargetProfile: "maisen-box-tight",
+  activeTargetLabel: "Maisen box front",
   cameraStatus: "booting",
   desktopWebcamEnabled: false,
   desktopStream: null,
@@ -56,11 +56,11 @@ function recordEvent(type, detail = {}) {
 
 function getTargetProfiles() {
   return {
-    "itoen-bottle": {
-      label: "Ito En bottle front",
-      targets: [itoenBottleTarget],
-      waitingTitle: "Use the real Ito En bottle front",
-      waitingBody: "Center the bottle front, keep it upright, and fill about half the frame with the green label.",
+    "maisen-box-tight": {
+      label: "Maisen box front",
+      targets: [maisenBoxTightTarget],
+      waitingTitle: "Use the Maisen box front",
+      waitingBody: "Keep the box front flat, upright, and fill about half the frame with the orange crest visible.",
     },
     "canister-cap": {
       label: "Canister cap photo",
@@ -70,9 +70,9 @@ function getTargetProfiles() {
     },
     all: {
       label: "All targets",
-      targets: [itoenBottleTarget, canisterCapTarget],
-      waitingTitle: "Use the Ito En bottle first",
-      waitingBody: "Start with the real Ito En bottle front. If it misses, switch to the canister photo target.",
+      targets: [maisenBoxTightTarget, canisterCapTarget],
+      waitingTitle: "Use the Maisen box first",
+      waitingBody: "Start with the Maisen box front. If it misses, switch to the canister photo target.",
     },
   }
 }
@@ -86,7 +86,7 @@ function getRequestedTargetProfile() {
     return requested
   }
 
-  return isDesktopBrowser() ? "all" : "itoen-bottle"
+  return isDesktopBrowser() ? "all" : "maisen-box-tight"
 }
 
 function ensureOverlay() {
@@ -696,7 +696,7 @@ function ensureOverlay() {
       <div class="rpg-chip-row">
         <span class="rpg-chip" id="rpg-target-found-chip">Image target: waiting</span>
         <span class="rpg-chip" id="rpg-status-chip">Status: booting</span>
-        <span class="rpg-chip" id="rpg-expected-target-chip">Expected: Ito En bottle front</span>
+        <span class="rpg-chip" id="rpg-expected-target-chip">Expected: Maisen box front</span>
         <span class="rpg-chip" id="rpg-target-chip">Target: waiting</span>
         <span class="rpg-chip" id="rpg-camera-chip">Camera: booting</span>
         <button id="rpg-focus-button" class="rpg-focus-toggle" type="button">Hide controls</button>
@@ -705,9 +705,9 @@ function ensureOverlay() {
     <div class="rpg-detection-guide" id="rpg-detection-guide">
       <div class="rpg-detection-frame" aria-hidden="true"></div>
       <div class="rpg-detection-copy">
-        <p class="rpg-detection-title" id="rpg-detection-title">Use the real Ito En bottle front</p>
+        <p class="rpg-detection-title" id="rpg-detection-title">Use the Maisen box front</p>
         <p class="rpg-detection-body" id="rpg-detection-body">
-          Center the bottle front, keep it upright, and fill about half the frame with the green label.
+          Keep the box front flat, upright, and fill about half the frame with the orange crest visible.
         </p>
       </div>
     </div>
