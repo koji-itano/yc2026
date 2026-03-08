@@ -22,7 +22,7 @@ export function HomeDashboard() {
       <header className="homeHeader">
         <div className="homeHeaderBrand">
           <span className="homeHeaderLogo">⚔</span>
-          <span className="homeHeaderTitle">RENT A HUMAN</span>
+          <span className="homeHeaderTitle">Yaorozu God OS</span>
         </div>
         <div className="homeHeaderRight">
           <div className="homeXpBadge">

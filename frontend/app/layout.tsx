@@ -3,7 +3,7 @@ import "./globals.css";
 import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
-  title: "Rent a Human RPG",
+  title: "Yaorozu God OS",
   description: "AI assigns real-world quests that only humans can complete.",
 };
 
