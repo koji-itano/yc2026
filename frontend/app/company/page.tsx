@@ -98,7 +98,7 @@ export default function CompanyPage() {
           <div>
             <span className="companyEyebrow">Company Console</span>
             <h1>Agent Dashboard</h1>
-            <p>境内カメラの監視状況とエージェントが発行したタスクを確認できます。</p>
+            <p>Track your AI agent's activity and review all quests it has issued to the platform.</p>
           </div>
           <div className="companyHeaderActions">
             <Link className="companyBackLink" href="/">← Back to map</Link>
@@ -110,9 +110,9 @@ export default function CompanyPage() {
           <div className="companyAgentCardLeft">
             <span className={`companyAgentDot${isOnline ? ' companyAgentDotOnline' : ''}`} />
             <div>
-              <strong className="companyAgentName">⛩ やおよろず神社</strong>
+              <strong className="companyAgentName">⛩ Yaoyorozu Shrine</strong>
               <span className="companyAgentMeta">
-                Blaxel Sandbox · 境内監視カメラ 6台稼働中
+                Blaxel Sandbox · 6 surveillance cameras active
               </span>
             </div>
           </div>
