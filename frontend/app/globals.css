@@ -1,14 +1,19 @@
 :root {
-  --bg: #f4efe7;
-  --bg-accent: #efe2cf;
-  --surface: rgba(255, 252, 247, 0.78);
-  --surface-strong: #fffaf2;
-  --text: #1f1a17;
-  --muted: #5f544c;
-  --line: rgba(74, 52, 39, 0.14);
-  --primary: #b44c2d;
-  --primary-strong: #8f381e;
-  --shadow: 0 24px 80px rgba(77, 48, 33, 0.12);
+  --bg: #050816;
+  --bg-deep: #02030a;
+  --surface: rgba(17, 24, 46, 0.56);
+  --surface-strong: rgba(15, 20, 42, 0.82);
+  --surface-soft: rgba(104, 124, 255, 0.1);
+  --text: #f4f7ff;
+  --muted: #a9b4d0;
+  --line: rgba(148, 168, 255, 0.22);
+  --line-strong: rgba(122, 183, 255, 0.42);
+  --purple: #8e6bff;
+  --blue: #4e8cff;
+  --cyan: #41e4ff;
+  --pink: #f25fff;
+  --shadow: 0 30px 100px rgba(0, 0, 0, 0.48);
+  --glow: 0 0 50px rgba(78, 140, 255, 0.28);
 }
 
 * {
@@ -24,10 +29,24 @@ body {
   min-height: 100vh;
   color: var(--text);
   background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.8), transparent 32%),
-    radial-gradient(circle at bottom right, rgba(180, 76, 45, 0.18), transparent 24%),
-    linear-gradient(160deg, var(--bg) 0%, var(--bg-accent) 100%);
-  font-family: Georgia, "Times New Roman", serif;
+    radial-gradient(circle at top left, rgba(142, 107, 255, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(65, 228, 255, 0.12), transparent 24%),
+    radial-gradient(circle at bottom center, rgba(242, 95, 255, 0.08), transparent 28%),
+    linear-gradient(180deg, #091024 0%, #040713 52%, #02030a 100%);
+  font-family: "SF Pro Display", "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at center, black 52%, transparent 90%);
+  opacity: 0.55;
 }
 
 a {
@@ -35,142 +54,347 @@ a {
   text-decoration: none;
 }
 
-.page-shell {
-  width: min(1100px, calc(100% - 32px));
-  margin: 0 auto;
-  padding: 56px 0 80px;
-}
-
-.hero-card {
+.landingPage {
   position: relative;
-  overflow: hidden;
-  padding: 40px;
-  border: 1px solid var(--line);
-  border-radius: 28px;
-  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-strong) 100%);
-  box-shadow: var(--shadow);
+  min-height: 100vh;
 }
 
-.hero-card::after {
+.mapPage {
+  position: relative;
+  min-height: 100vh;
+}
+
+.mapCanvas {
+  width: 100%;
+  min-height: 100vh;
+  filter: grayscale(0.22) saturate(0.78) brightness(0.66) contrast(1.16);
+}
+
+.mapFallback {
+  position: absolute;
+  inset: 0;
+  transition: opacity 260ms ease;
+}
+
+.mapFallbackActive {
+  opacity: 1;
+}
+
+.mapFallbackHidden {
+  opacity: 0;
+}
+
+.mapFallbackGrid {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(78, 140, 255, 0.16), transparent 18%),
+    linear-gradient(180deg, rgba(11, 18, 38, 0.4) 0%, rgba(2, 3, 10, 0.76) 100%);
+}
+
+.mapFallbackGrid::before,
+.mapFallbackGrid::after {
   content: "";
   position: absolute;
-  inset: auto -40px -40px auto;
-  width: 180px;
-  height: 180px;
-  border-radius: 999px;
-  background: rgba(180, 76, 45, 0.1);
-  filter: blur(6px);
+  inset: 0;
 }
 
-.eyebrow {
-  margin: 0 0 12px;
-  color: var(--primary-strong);
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+.mapFallbackGrid::before {
+  background-image:
+    linear-gradient(rgba(73, 219, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(73, 219, 255, 0.12) 1px, transparent 1px);
+  background-size: 92px 92px;
+  transform: perspective(900px) rotateX(72deg) scale(1.3);
+  transform-origin: center bottom;
+  opacity: 0.42;
 }
 
-h1 {
-  max-width: 10ch;
+.mapFallbackGrid::after {
+  background:
+    radial-gradient(circle at 22% 64%, rgba(143, 114, 255, 0.22), transparent 10%),
+    radial-gradient(circle at 48% 44%, rgba(65, 228, 255, 0.24), transparent 11%),
+    radial-gradient(circle at 72% 56%, rgba(242, 95, 255, 0.18), transparent 9%);
+}
+
+.mapFallbackMessage {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  max-width: 360px;
+  padding: 18px 20px;
+  z-index: 1;
+}
+
+.mapFallbackMessage strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.mapFallbackMessage p {
   margin: 0;
-  font-size: clamp(3rem, 8vw, 5.8rem);
-  line-height: 0.95;
-}
-
-.lede {
-  max-width: 42rem;
-  margin: 20px 0 0;
   color: var(--muted);
-  font-size: 1.1rem;
-  line-height: 1.7;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 28px;
-}
-
-.primaryAction,
-.secondaryAction {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  padding: 0 18px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  transition:
-    transform 140ms ease,
-    background-color 140ms ease,
-    border-color 140ms ease;
-}
-
-.primaryAction {
-  color: #fff7f1;
-  background: var(--primary);
-}
-
-.primaryAction:hover {
-  transform: translateY(-1px);
-  background: var(--primary-strong);
-}
-
-.secondaryAction {
-  color: var(--text);
-  border-color: var(--line);
-  background: rgba(255, 255, 255, 0.46);
-}
-
-.secondaryAction:hover {
-  transform: translateY(-1px);
-  border-color: rgba(74, 52, 39, 0.3);
-}
-
-.highlights {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 20px;
-}
-
-.highlightCard {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  padding: 18px;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  background: rgba(255, 250, 242, 0.72);
-}
-
-.highlightCard p {
-  margin: 0;
+  font-size: 0.92rem;
   line-height: 1.6;
 }
 
-.highlightDot {
-  width: 12px;
-  height: 12px;
-  margin-top: 7px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, var(--primary) 0%, #da8f5e 100%);
-  flex: 0 0 auto;
+.mapFallbackEyebrow {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: #d2d8ff;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-transform: uppercase;
 }
 
-@media (max-width: 800px) {
-  .page-shell {
-    width: min(100% - 24px, 1100px);
-    padding: 24px 0 48px;
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: #06101d;
+  font: inherit;
+}
+
+.leaflet-tile-pane {
+  filter: hue-rotate(180deg) saturate(0.6) brightness(0.48) contrast(1.22);
+}
+
+.leaflet-pane,
+.leaflet-control-container,
+.leaflet-marker-pane,
+.leaflet-overlay-pane {
+  z-index: 1;
+}
+
+.leaflet-top.leaflet-left {
+  top: 22px;
+  left: auto;
+  right: 22px;
+  z-index: 3;
+}
+
+.leaflet-control-zoom {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.leaflet-control-zoom a {
+  width: 38px !important;
+  height: 38px !important;
+  border: 0 !important;
+  background: rgba(6, 10, 24, 0.82) !important;
+  color: #eef2ff !important;
+  line-height: 38px !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: rgba(24, 34, 70, 0.92) !important;
+}
+
+.leaflet-bottom.leaflet-right {
+  right: 14px;
+  bottom: 10px;
+}
+
+.leaflet-control-attribution {
+  padding: 6px 10px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px !important;
+  background: rgba(4, 6, 16, 0.56) !important;
+  color: rgba(233, 239, 255, 0.72) !important;
+  backdrop-filter: blur(10px);
+}
+
+.leaflet-control-attribution a {
+  color: rgba(233, 239, 255, 0.72) !important;
+}
+
+.questMarkerWrapper {
+  background: transparent;
+  border: 0;
+}
+
+.questMarker {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  transform: translate(-50%, -100%);
+  cursor: pointer;
+}
+
+.questPopupWrapper .leaflet-popup-content-wrapper {
+  border: 1px solid rgba(148, 168, 255, 0.22);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(21, 29, 56, 0.92) 0%, rgba(11, 15, 33, 0.9) 100%);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  backdrop-filter: blur(20px);
+}
+
+.questPopupWrapper .leaflet-popup-content {
+  margin: 0;
+  min-width: 240px;
+}
+
+.questPopupWrapper .leaflet-popup-tip {
+  background: rgba(11, 15, 33, 0.94);
+}
+
+.questPopup {
+  padding: 14px;
+}
+
+.questPopupType {
+  display: inline-block;
+  color: #d2d8ff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.questPopup h2 {
+  margin: 8px 0 0;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.questPopup p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.questPopupMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.questPopupMeta span {
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #eef2ff;
+  font-size: 0.74rem;
+}
+
+.heroOnly .heroCopy {
+  max-width: 560px;
+}
+
+.heroOnly .heroHud {
+  max-width: 360px;
+}
+
+.questMarkerPulse,
+.questMarkerCore {
+  position: absolute;
+  left: 50%;
+  border-radius: 999px;
+  transform: translateX(-50%);
+}
+
+.questMarkerPulse {
+  bottom: 4px;
+  width: 28px;
+  height: 28px;
+  background: color-mix(in srgb, var(--marker-color) 30%, transparent);
+  animation: markerPulse 1.9s ease-in-out infinite;
+}
+
+.questMarkerCore {
+  bottom: 9px;
+  width: 14px;
+  height: 14px;
+  background: var(--marker-color);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--marker-color) 22%, transparent),
+    0 0 22px color-mix(in srgb, var(--marker-color) 80%, transparent);
+}
+
+.questMarkerCore::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 11px;
+  width: 2px;
+  height: 18px;
+  background: linear-gradient(180deg, var(--marker-color) 0%, transparent 100%);
+  transform: translateX(-50%);
+}
+
+.questMarkerLabel {
+  position: absolute;
+  bottom: 34px;
+  left: 50%;
+  min-width: 54px;
+  padding: 4px 8px;
+  border: 1px solid color-mix(in srgb, var(--marker-color) 35%, rgba(255, 255, 255, 0.12));
+  border-radius: 999px;
+  background: rgba(5, 8, 22, 0.78);
+  color: #eef2ff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-align: center;
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+}
+
+@keyframes markerPulse {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(0.82);
+    opacity: 0.4;
   }
 
-  .hero-card {
-    padding: 28px;
+  50% {
+    transform: translateX(-50%) scale(1.18);
+    opacity: 0.9;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(0.96);
+    opacity: 0.72;
   }
 
-  .highlights {
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 1100px) {
+  .heroGrid {
     grid-template-columns: 1fr;
+    align-items: end;
+    padding-top: 84px;
+  }
+
+  .heroHud {
+    max-width: 460px;
+  }
+}
+
+@media (max-width: 720px) {
+  .leaflet-top.leaflet-left {
+    top: 14px;
+    right: 14px;
+  }
+
+  .leaflet-bottom.leaflet-right {
+    right: 10px;
+    bottom: 8px;
   }
 }

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
-  title: "GuidanceOS Frontend",
-  description: "Runnable hello world frontend for the Guidance OS hackathon project.",
+  title: "Rent a Human RPG",
+  description: "AI assigns real-world quests that only humans can complete.",
 };
 
 export default function RootLayout({
