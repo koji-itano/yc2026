@@ -1,11 +1,5 @@
-import { HeroMap } from "./components/HeroMap";
+import { HomeDashboard } from "./components/HomeDashboard";
 
 export default function HomePage() {
-  return (
-    <main className="landingPage">
-      <section className="mapPage" id="top">
-        <HeroMap />
-      </section>
-    </main>
-  );
+  return <HomeDashboard />;
 }

@@ -22,6 +22,7 @@
     "@types/react-dom": "latest",
     "eslint": "^9.0.0",
     "eslint-config-next": "latest",
+    "playwright": "^1.58.2",
     "typescript": "latest"
   }
 }
