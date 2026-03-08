@@ -26,6 +26,7 @@ Notes:
 - Generated certificates are stored in `certs/` and are ignored by git.
 - On iPhone, the default image target profile is `maisen-box-tight`, generated as a `PLANAR` target from the cropped Maisen box front image. Use `?target=all` only if you need to test multiple targets.
 - For the best `imagefound` result, keep the Maisen box front flat, upright, evenly lit, and filling roughly 40-60% of the frame.
+- The scene camera is configured as `World` / `xrCameraType: world` so 8th Wall image-target tracking can use the AR camera feed on mobile.
 
 This export now includes a WIL-9 tabletop worker overlay in `src/app.js`.
 It adds:

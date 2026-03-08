@@ -813,7 +813,7 @@ function ensureOverlay() {
 }
 
 function render() {
-  const cameraActive = state.desktopWebcamEnabled || state.liveCameraEnabled;
+  const cameraActive = isDesktopBrowser() ? state.desktopWebcamEnabled : true;
   const imageTargetActive = isImageTargetActive();
   const showDetectionGuide = cameraActive && !state.targetLocked;
 
@@ -838,10 +838,10 @@ function render() {
   DOM.proofOutput.textContent = state.proofRecord
     ? JSON.stringify(state.proofRecord, null, 2)
     : "Capture before/after evidence to generate a proof package.";
-  DOM.webcamButton.disabled = isDesktopBrowser() ? state.desktopWebcamEnabled : state.liveCameraEnabled;
-  DOM.webcamButton.textContent = isDesktopBrowser() ? "Enable desktop webcam" : "Enable live camera";
-  DOM.webcamButton.style.display = "inline-flex";
-  DOM.liveCamera.style.display = !isDesktopBrowser() && state.liveCameraEnabled ? "block" : "none";
+  DOM.webcamButton.disabled = state.desktopWebcamEnabled;
+  DOM.webcamButton.textContent = "Enable desktop webcam";
+  DOM.webcamButton.style.display = isDesktopBrowser() ? "inline-flex" : "none";
+  DOM.liveCamera.style.display = "none";
   DOM.desktopPreview.style.display = isDesktopBrowser() ? "block" : "none";
   syncSceneCanvasVisibility();
   DOM.beforeButton.disabled = !state.targetLocked;
@@ -860,9 +860,8 @@ function isImageTargetActive() {
 
 function syncSceneCanvasVisibility() {
   const sceneCanvases = Array.from(document.querySelectorAll("body canvas:not(#rpg-desktop-preview)"));
-  const hideSceneCanvas = !isDesktopBrowser() && state.liveCameraEnabled;
   sceneCanvases.forEach((canvas) => {
-    canvas.style.opacity = hideSceneCanvas ? "0" : "1";
+    canvas.style.opacity = "1";
   });
 }
 
@@ -877,8 +876,8 @@ function buildNote() {
     if (isDesktopBrowser() && !state.desktopWebcamEnabled) {
       return "On Mac desktop, click Enable desktop webcam to test the 8th Wall overlay with the browser camera API.";
     }
-    if (!isDesktopBrowser() && !state.liveCameraEnabled) {
-      return "On iPhone, tap Enable live camera first so the canister stays visible while you use the manual anchor flow.";
+    if (!isDesktopBrowser()) {
+      return `Use the 8th Wall World camera feed and scan ${state.activeTargetLabel}. Keep it flat, centered, and well lit.`;
     }
     if (state.imageTargetsConfigured.length) {
       return `Scanning for ${state.activeTargetLabel}. Keep it flat, centered, and fill roughly 40-60% of the frame.`;
@@ -1090,11 +1089,6 @@ function renderDesktopPreview() {
 }
 
 async function enableDesktopWebcam() {
-  if (!isDesktopBrowser()) {
-    await enableLiveCamera()
-    return
-  }
-
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     state.cameraStatus = "Web camera API unavailable";
     recordEvent("desktop_webcam_failed", { reason: "media_devices_unavailable" });

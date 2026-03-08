@@ -32,8 +32,8 @@
       "camera": {
         "type": "perspective",
         "xr": {
-          "desktop": "3D",
-          "xrCameraType": "3dOnly",
+          "desktop": "World",
+          "xrCameraType": "world",
           "headset": "disabled"
         }
       },
