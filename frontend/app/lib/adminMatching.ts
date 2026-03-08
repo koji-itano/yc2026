@@ -10,6 +10,10 @@ export type AdminTask = {
   priority: TaskPriority;
   requiredSkill: string;
   reward: string;
+  searchProfile: {
+    functions: string[];
+    titleKeywords: string[];
+  };
   summary: string;
   title: string;
   type: string;
@@ -54,6 +58,34 @@ export type TaskRecommendation = {
   task: AdminTask;
   score: number;
   reason: string;
+};
+
+type CrustdataFilterType = "FUNCTION" | "REGION";
+
+export type CrustdataRequestPayload = {
+  filters: Array<{
+    filter_type: CrustdataFilterType;
+    type: "in";
+    value: string[];
+  }>;
+  page: number;
+};
+
+export type CrustdataPerson = {
+  about?: string | null;
+  current_company?: string | null;
+  current_company_name?: string | null;
+  current_employer?: string | null;
+  current_location?: string | null;
+  current_title?: string | null;
+  headline?: string | null;
+  linkedin_profile_url?: string | null;
+  linkedin_profile_urn?: string | null;
+  location?: string | null;
+  name?: string | null;
+  query_person_linkedin_urn?: string | null;
+  summary?: string | null;
+  title?: string | null;
 };
 
 const areaProximity: Record<string, Record<string, number>> = {
@@ -151,6 +183,123 @@ function getSkillScore(task: AdminTask, worker: Worker) {
   }
 
   return { label: "adjacent field experience", points: 10 };
+}
+
+function getLocationTokens(location: string) {
+  return location
+    .toLowerCase()
+    .split(/[,\s/()-]+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+}
+
+function getCandidateDistance(task: AdminTask, location: string) {
+  const candidateArea = location.split(",")[0]?.trim() ?? "";
+  const rawDistance = areaProximity[task.locationArea]?.[candidateArea] ?? 9;
+
+  if (rawDistance <= 1) {
+    return { distanceLabel: "same zone", points: 20 };
+  }
+
+  if (rawDistance <= 3) {
+    return { distanceLabel: "nearby", points: 14 };
+  }
+
+  if (rawDistance <= 5) {
+    return { distanceLabel: "cross-district", points: 7 };
+  }
+
+  return { distanceLabel: "far transfer", points: 2 };
+}
+
+function getProfileConfidence(profile: CrustdataPerson) {
+  const signals = [
+    profile.linkedin_profile_url,
+    profile.headline,
+    profile.current_title ?? profile.title,
+    profile.current_company_name ?? profile.current_company ?? profile.current_employer,
+    profile.current_location ?? profile.location,
+  ].filter((value) => typeof value === "string" && value.trim().length > 0).length;
+
+  if (signals >= 4) {
+    return "high" as const;
+  }
+
+  if (signals >= 2) {
+    return "medium" as const;
+  }
+
+  return "low" as const;
+}
+
+function getRoleFit(task: AdminTask, profile: CrustdataPerson) {
+  const requiredSkill = task.requiredSkill.toLowerCase();
+  const taskType = task.type.toLowerCase();
+  const keywords = task.searchProfile.titleKeywords.map((keyword) => keyword.toLowerCase());
+  const haystack = [
+    profile.current_title,
+    profile.title,
+    profile.headline,
+    profile.summary,
+    profile.about,
+  ]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .join(" ")
+    .toLowerCase();
+
+  if (haystack.includes(requiredSkill)) {
+    return { label: `role fit: strong ${task.requiredSkill.toLowerCase()} match`, points: 42 };
+  }
+
+  if (haystack.includes(taskType)) {
+    return { label: `role fit: good ${task.type.toLowerCase()} coverage`, points: 30 };
+  }
+
+  const matchedKeyword = keywords.find((keyword) => haystack.includes(keyword));
+  if (matchedKeyword) {
+    return { label: `role fit: matched ${matchedKeyword}`, points: 22 };
+  }
+
+  return { label: "role fit: adjacent operations background", points: 10 };
+}
+
+export function rerankCandidates(task: AdminTask, profiles: CrustdataPerson[]): AdminCandidate[] {
+  return profiles
+    .map((profile) => {
+      const location = profile.current_location ?? profile.location ?? "Tokyo, Japan";
+      const normalizedTitle = profile.current_title ?? profile.title ?? "Unknown title";
+      const headline = profile.headline ?? profile.summary ?? profile.about ?? normalizedTitle;
+      const company =
+        profile.current_company_name ?? profile.current_company ?? profile.current_employer ?? "Unknown company";
+      const distance = getCandidateDistance(task, location);
+      const roleFit = getRoleFit(task, profile);
+      const profileConfidence = getProfileConfidence(profile);
+      const confidencePoints =
+        profileConfidence === "high" ? 12 : profileConfidence === "medium" ? 6 : 0;
+      const locationTokens = getLocationTokens(location);
+      const tokyoBonus = locationTokens.includes("tokyo") ? 6 : 0;
+      const score = roleFit.points + distance.points + confidencePoints + tokyoBonus;
+
+      return {
+        id:
+          profile.linkedin_profile_urn ??
+          profile.query_person_linkedin_urn ??
+          profile.linkedin_profile_url ??
+          `${profile.name ?? ""}:${normalizedTitle}`,
+        name: profile.name?.trim() || "Unknown candidate",
+        title: normalizedTitle,
+        company,
+        location,
+        headline,
+        distanceLabel: distance.distanceLabel,
+        profileConfidence,
+        roleFitLabel: roleFit.label,
+        reasons: [roleFit.label, `location fit: ${distance.distanceLabel}`, `profile confidence: ${profileConfidence}`],
+        score,
+        linkedinUrl: profile.linkedin_profile_url ?? undefined,
+      } satisfies AdminCandidate;
+    })
+    .sort((left, right) => right.score - left.score || left.name.localeCompare(right.name));
 }
 
 export function rankCandidates(task: AdminTask, workers: Worker[]): RankedCandidate[] {

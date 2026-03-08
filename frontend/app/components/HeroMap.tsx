@@ -255,7 +255,7 @@ export function HeroMap() {
     taskNoticeSeqRef.current += 1;
 
     setTaskNotices((current) => {
-      const next = [{ id: noticeId, marker, phase: "enter", task: activeTask }, ...current];
+      const next: TaskNotice[] = [{ id: noticeId, marker, phase: "enter", task: activeTask }, ...current];
       return next.slice(0, TASK_NOTICE_MAX_VISIBLE);
     });
 
